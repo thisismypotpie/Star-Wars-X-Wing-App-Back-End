@@ -127,8 +127,9 @@ function get_pilot_data()
       //Determine if the pilot is unique or not.
       var unique_pilot = false;
       var ship_object = undefined;
-      if(element.unique_pilot == 1)
+      if(element.UniquePilot == 1)
       {
+        console.log("truth!");
         unique_pilot = true;
       }
       else
