@@ -1,5 +1,5 @@
 class pilot{
-    constructor(pilot_name, faction, pilot_skill, cost, upgrade_types, ship_name, image_path, uniquePilot)
+    constructor(pilot_name, faction, pilot_skill, cost, upgrade_types, ship_name, image_path, is_unique)
     {
         this.pilot_name = pilot_name;
         this.faction = faction;
@@ -8,6 +8,7 @@ class pilot{
         this.upgrade_types = upgrade_types;
         this.ship_name = ship_name;
         this.image_path = image_path;
+        this.is_unique = is_unique;
     }
     
 }

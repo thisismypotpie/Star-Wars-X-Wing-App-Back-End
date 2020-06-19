@@ -129,7 +129,6 @@ function get_pilot_data()
       var ship_object = undefined;
       if(element.UniquePilot == 1)
       {
-        console.log("truth!");
         unique_pilot = true;
       }
       else
