@@ -54,7 +54,7 @@ const server = http.createServer(function(request, response){
   close_database_connection();*/
   setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
 });
-var port = /*process.env.PORT||*/3000;
+var port = process.env.PORT||3000;
 server.listen(port);
 /**
  * End Main Response Function
