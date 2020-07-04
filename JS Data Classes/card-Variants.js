@@ -28,3 +28,11 @@ class UpgradeCard{
     }
 }
 module.exports.UpgradeCard = UpgradeCard;
+
+class DualSidedUpgrade extends UpgradeCard{
+    constructor(name, type, cost, characteristics, image_path)
+    {
+        this.orientation = "front";
+    }
+}
+module.exports.DualSidedUpgrade = DualSidedUpgrade;

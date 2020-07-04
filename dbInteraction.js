@@ -160,7 +160,15 @@ function get_upgrade_data(){
   var tables = query("SELECT * FROM UpgradesTable")
   .then(tables=>{
     tables.forEach(element => {
-      all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));    
+      if(element.Characteristics != null && Array.from(element.Characteristics).includes("Dual"))
+      {
+        all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));
+      }
+      else
+      {
+        all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));  
+      }
+  
     })
     console.log("UPGRADE CARDS COMPLETE. LENGTH: "+all_upgrades.length);
     game_data.all_upgrades = all_upgrades;
