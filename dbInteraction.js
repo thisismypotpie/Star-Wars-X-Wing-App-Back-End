@@ -54,7 +54,7 @@ const server = http.createServer(function(request, response){
   close_database_connection();*/
   setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
 });
-var port = process.env.PORT||3000;
+var port = /*process.env.PORT||*/3000;
 server.listen(port);
 /**
  * End Main Response Function
@@ -160,8 +160,9 @@ function get_upgrade_data(){
   var tables = query("SELECT * FROM UpgradesTable")
   .then(tables=>{
     tables.forEach(element => {
-      if(element.Characteristics != null && Array.from(element.Characteristics).includes("Dual"))
+      if(element.Characteristics != null && Array.from(element.Characteristics.split('*')).includes("Dual"))
       {
+        console.log(element.Name+" is a dual sided upgrade.");
         all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));
       }
       else

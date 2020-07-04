@@ -32,6 +32,7 @@ module.exports.UpgradeCard = UpgradeCard;
 class DualSidedUpgrade extends UpgradeCard{
     constructor(name, type, cost, characteristics, image_path)
     {
+        super(name, type, cost, characteristics, image_path);
         this.orientation = "front";
     }
 }
