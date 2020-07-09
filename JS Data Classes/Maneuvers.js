@@ -12,8 +12,8 @@ class Maneuver{
 module.exports.Maneuver = Maneuver;
 
 class Large_Maneuver extends Maneuver{
-    constructor(maneuver_type, maneuver_color, range, maneuver_symbol_path, energy_symbol_path, energy_gained){
-        super(maneuver_type, maneuver_color, range, maneuver_symbol_path);
+    constructor(id, maneuver_type, maneuver_color, range,range_symbol_path, maneuver_symbol_path,energy_symbol_path, energy_gained){
+        super(id,maneuver_type, maneuver_color, range,range_symbol_path, maneuver_symbol_path);
         this.energy_symbol_path = energy_symbol_path;
         this.energy_gained = energy_gained;
     }

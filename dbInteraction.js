@@ -110,7 +110,7 @@ function get_large_maneuver_data()
     var all_maneuvers = [];
     tables.forEach(element => {
       all_maneuvers.push(new maneuver_page.Large_Maneuver(element.ID,element.Maneuver,element.Color,element.Range, element.RangePath, element.ManeuverPath, element.EnergyPath,element.EnergyGained));
-  })
+    })
   console.log("LARGE SHIP MANEUVERS LOADED. LENGTH: "+all_maneuvers.length);
   game_data.all_maneuvers = game_data.all_maneuvers.concat(all_maneuvers);
   get_ship_data();
