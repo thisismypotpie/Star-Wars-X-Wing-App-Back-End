@@ -25,8 +25,6 @@ var game_data = {
   all_crit_cards:[],
   all_conditions:[],
   all_upgrades:[],
-  ship_death_music:null,
-  ship_death_music_minions:null
 };
 /**
   * End Define Global Variables Section
