@@ -24,9 +24,7 @@ var game_data = {
   all_pilots:[],
   all_crit_cards:[],
   all_conditions:[],
-  all_upgrades:[],
-  death_theme: new Audio('./death theme.wav'),
-  death_theme_minion: new Audio('./minions death theme.wav')
+  all_upgrades:[]
 };
 /**
   * End Define Global Variables Section
