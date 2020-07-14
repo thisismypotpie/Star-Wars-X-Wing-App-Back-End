@@ -39,22 +39,56 @@ const server = http.createServer(function(request, response){
   response.setHeader('Content-Type', 'application/json');
   response.setHeader("Access-Control-Allow-Origin","*");
   //response.setHeader("Access-Control-Allow-Origin","null");
-  establish_database_connection();
-  get_crit_cards_data();
-  get_condition_data();
-  get_upgrade_data();
-  
-  get_maneuver_data();
-  //I needed to use chain function calling here because I was not able to achieve the load order that I wanted in any other way. 
-  //Therefore, each function will call the next one within its promise to ensure the load order of the database while the response
-  //must wait three seconds before returning to ensure that the game_data object is fully created before returning.
-  /*get_ship_data();
-  get_pilot_data();
-  add_large_ship_data();
-  close_database_connection();*/
-  setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
+  console.log(request.url);
+  if(request.url == "/get_data")//Get all data at the start of the game.
+  {
+    establish_database_connection("game_data");
+    get_crit_cards_data();
+    get_condition_data();
+    get_upgrade_data();   
+    get_maneuver_data();
+    //I needed to use chain function calling here because I was not able to achieve the load order that I wanted in any other way. 
+    //Therefore, each function will call the next one within its promise to ensure the load order of the database while the response
+    //must wait three seconds before returning to ensure that the game_data object is fully created before returning.
+    /*get_ship_data();
+    get_pilot_data();
+    add_large_ship_data();
+    close_database_connection();*/
+    setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
+  }
+  else if(request.url == "/save_game")//Save a game.
+  {
+    establish_database_connection("saved_games");
+    let body = '';
+    request.on('data', chunk => {
+    body += chunk.toString();});
+    request.on('end', () => {
+      console.log("BODY: "+body);
+    })
+    response.end('ok');
+  }
+  else if(request.url == "/load_game")//Load a game.
+  {
+    establish_database_connection("saved_games");
+  }
+  else if(request.url == "/overwrite_game")//overwite a game.
+  {
+    establish_database_connection("saved_games");
+  }
+  else if(request.url == "/get_game_names")//get all names of currently saved games.
+  {
+    establish_database_connection("saved_games");
+    var game_names = get_game_names();
+    setTimeout(()=>{response.end(JSON.stringify(game_names))},3000);
+  }
+  else
+  {
+    response.statusCode = 400;
+    response.statusMessage = "ERROR: Invlaid URL";
+    response.end();
+  }
 });
-var port = process.env.PORT||3000;
+var port = /*process.env.PORT||*/3000;
 server.listen(port);
 /**
  * End Main Response Function
@@ -205,6 +239,18 @@ function get_crit_cards_data()
   })
 }
 
+function get_game_names()
+{
+  var names = [];
+  var tables = query("SELECT * FROM GameIdentifiers")
+  .then(tables=>{
+    tables.forEach(element=>{
+      names.push(element.GameName);
+    })
+  });
+  return names;
+}
+
 
 //This will promisify the query so I do not need to write a promise every time.
 function query(sql,args)
@@ -220,7 +266,9 @@ function query(sql,args)
 
 
 
-function establish_database_connection()
+function establish_database_connection(db_connection_name)
+{
+if(db_connection_name == "game_data")
 {
   var dbExists = fs.existsSync('./GameDB.db');
 if(dbExists)
@@ -236,6 +284,24 @@ if(dbExists)
  console.log("Connection Established");
 }
 }
+else if(db_connection_name == "saved_games")
+{
+  var dbExists = fs.existsSync('./GameDB.db');
+if(dbExists)
+{
+//open the database connection
+  db = new sqlite3.Database('./SavedGameInfoDB.db', sqlite3,(err)=>{
+    if(err != null)
+    {
+        console.log(err);    
+        return;  
+    }
+ });
+ console.log("Connection Established");
+}
+}
+}
+
 
 
 function close_database_connection()
