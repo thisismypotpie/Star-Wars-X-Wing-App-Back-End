@@ -9,6 +9,7 @@ const maneuver_page = require('./JS Data Classes/Maneuvers.js');
 const pilot_page = require('./JS Data Classes/Pilot-Variants');
 const card_page = require('./JS Data Classes/card-Variants');
 const http = require('http');
+const { brotliDecompress } = require('zlib');
 /**
  * End Require Section
  */
@@ -63,7 +64,8 @@ const server = http.createServer(function(request, response){
     request.on('data', chunk => {
     body += chunk.toString();});
     request.on('end', () => {
-      console.log("BODY: "+body);
+      body = JSON.parse(body);
+      save_name_game(body);
     })
     response.end('ok');
   }
@@ -74,6 +76,14 @@ const server = http.createServer(function(request, response){
   else if(request.url == "/overwrite_game")//overwite a game.
   {
     establish_database_connection("saved_games");
+    let body = '';
+    request.on('data', chunk => {
+    body += chunk.toString();});
+    request.on('end', () => {
+      body = JSON.parse(body);
+      overwrite_game(body);
+    })
+    response.end('ok');
   }
   else if(request.url == "/get_game_names")//get all names of currently saved games.
   {
@@ -318,8 +328,15 @@ db.close((err) => {
 
 
 
+function save_name_game(body)
+{
+  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",body[body.length-1].save_game_name,body[body.length-1].save_game_phase);
+}
 
-
+function overwrite_game(body)
+{
+ db.run("UPDATE GameIdentifiers SET GamePhase = '"+body[body.length-1].save_game_phase+"' WHERE GameName = '"+body[body.length-1].save_game_name+"'")
+}
 
 
 
