@@ -434,7 +434,26 @@ function save_name_game(body)
         .then(()=>{//Store ships in the 
             console.log("TEAM ID DISPLAY!")
             console.log(team_name_and_id_list);
-
+            for(var i=0; i < body.length;i++)
+            {
+              for(var j=0; i < body[i].ship_list.length;j++)
+              {
+                  var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
+                  if(current_ship.ship_name.ship_type == "largeTwoCard")
+                  {
+                    
+                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+                  }
+                  else if(current_ship.ship_name.ship_type == "largeOneCard")
+                  {
+                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+                  }
+                  else
+                  {
+                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+                  }
+              }
+            }
         })
   })//End then #2
 }
