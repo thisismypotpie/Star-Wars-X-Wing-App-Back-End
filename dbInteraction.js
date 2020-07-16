@@ -190,7 +190,7 @@ function get_pilot_data()
         }
         iteration ++;
       }
-      all_pilots.push(new pilot_page.pilot(element.Name, element.Faction, element.PilotSkill, element.Cost,element.UpgradeTypes.split('*'),ship_object, element.ImagePath,unique_pilot));
+      all_pilots.push(new pilot_page.pilot(element.Name, element.Faction, element.PilotSkill, element.Cost,element.UpgradeTypes.split('*'),ship_object, element.ImagePath,unique_pilot,element.ID));
     })
     game_data.all_pilots = all_pilots;
     console.log("PILOTS COMPLETE. LENGTH: "+all_pilots.length);
@@ -367,7 +367,7 @@ function add_large_ship_data()
           element.CrippledEnergy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role)
           game_data.ship_list.push(ship_to_push);
           game_data.all_pilots.push(new pilot_page.largeShipTwoCardPilot(element.Name+" Pilot", element.Faction,element.PilotSkill, element.Cost, 
-          element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false, element.AftImage, element.CrippledForeImage, element.CrippledAftImage));
+          element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false, element.AftImage, element.CrippledForeImage, element.CrippledAftImage,element.ID));
         }
       else if(element.LargeShipType == "largeOneCard")
       {
@@ -375,7 +375,7 @@ function add_large_ship_data()
         let ship_to_push = new ship_page.Large_Ship_One_Card(element.LargeShipType,element.Name,0,0,element.ForeShields, 
           element.ForeHull, maneuvers_for_this_ship, element.Energy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role);
         game_data.ship_list.push(ship_to_push);
-        game_data.all_pilots.push(new pilot_page.pilot(element.Name+" Pilot", element.Faction,element.PilotSkill, element.Cost, element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false));
+        game_data.all_pilots.push(new pilot_page.pilot(element.Name+" Pilot", element.Faction,element.PilotSkill, element.Cost, element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false,element.ID));
       }
       else
       {
