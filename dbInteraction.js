@@ -207,11 +207,11 @@ function get_upgrade_data(){
       if(element.Characteristics != null && Array.from(element.Characteristics.split('*')).includes("Dual"))
       {
         console.log(element.Name+" is a dual sided upgrade.");
-        all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));
+        all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath,element.ID));
       }
       else
       {
-        all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath));  
+        all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath,element.ID));  
       }
   
     })
@@ -227,7 +227,7 @@ function get_condition_data()
   var tables = query("SELECT * FROM ConditionsTable")
   .then(tables=>{
     tables.forEach(element =>{
-      all_conditions.push(new card_page.condition(element.Name, element.ImagePath));
+      all_conditions.push(new card_page.condition(element.Name, element.ImagePath,element.ID));
     })
     console.log("CONDITION CARDS COMPLETE. LENGTH: "+all_conditions.length);
     game_data.all_conditions = all_conditions;
@@ -241,7 +241,7 @@ function get_crit_cards_data()
   var tables = query("SELECT * FROM CriticalHitTable")
   .then(tables=>{
     tables.forEach(element => {
-      all_crit_cards.push(new card_page.criticalHitCard(element.Name, element.ImagePath));
+      all_crit_cards.push(new card_page.criticalHitCard(element.Name, element.ImagePath,element.ID));
     });
     console.log("CRITICAL HIT CARDS COMPLETE. LENGTH: "+all_crit_cards.length);
     game_data.all_crit_cards = all_crit_cards;
@@ -405,7 +405,7 @@ function save_name_game(body)
         game_id = element.ID;
       })
   })
-  .then(async()=>{//Insert into team table.
+  .then(()=>{//Insert into team table.
     for(var i =0; i < body.length;i++)
     {
       console.log("Pushing: "+body[i].team_name);
@@ -417,7 +417,8 @@ function save_name_game(body)
       {
         has_init = 0;
       }
-      await store_in_save_team_table(game_id,body[i].team_name,has_init);
+      var turnOrder = (i+1);
+      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder);
     }
   })//End then #1
 
@@ -430,9 +431,10 @@ function save_name_game(body)
             team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
             })
         })
-        .then(()=>{
+        .then(()=>{//Store ships in the 
             console.log("TEAM ID DISPLAY!")
             console.log(team_name_and_id_list);
+
         })
   })//End then #2
 }
@@ -442,8 +444,4 @@ function overwrite_game(body)
  db.run("UPDATE GameIdentifiers SET GamePhase = '"+body[body.length-1].save_game_phase+"' WHERE GameName = '"+body[body.length-1].save_game_name+"'")
 }
 
-function store_in_save_team_table(game_id,team_name,has_init)
-{
-  db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative) VALUES(?,?,?)",game_id,team_name,has_init)
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
