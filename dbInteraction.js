@@ -326,64 +326,6 @@ db.close((err) => {
 
 }
 
-
-
-function save_name_game(body)
-{
-  var game_name = body[body.length-1].save_game_name;
-  var save_game_phase = body[body.length-1].save_game_phase;
-  body.pop();//Get rid of save name and phase.
-  var game_id = 0;
-  var team_name_and_id_list = [];
-  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase);
-  var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
-  .then(tables=>{//Get ID
-      tables.forEach(element=>{
-        game_id = element.ID;
-      })
-  })
-  .then(()=>{//Insert into team table.
-    for(var i =0; i < body.length;i++)
-    {
-      console.log("Pushing: "+body[i].team_name);
-      if(body[i].has_initiative_token == true)
-      {
-        has_init = 1;
-      }
-      else
-      {
-        has_init = 0;
-      }
-      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative) VALUES(?,?,?)",game_id,body[i].team_name,has_init)
-    }
-  })//End then #1
-
-
-  .then(()=>{ //Get Team ID's with names.
-       var team_tables = query("SELECT TeamName,TeamID FROM SavedTeamsTable WHERE SavedGameID = '"+game_id+"'")
-       .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
-          team_tables.forEach(element=>{
-            console.log("pushing new team.")
-            team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
-            })
-        })
-        .then(()=>{
-            console.log("TEAM ID DISPLAY!")
-            console.log(team_name_and_id_list);
-        })
-  })//End then #2
-}
-
-function overwrite_game(body)
-{
- db.run("UPDATE GameIdentifiers SET GamePhase = '"+body[body.length-1].save_game_phase+"' WHERE GameName = '"+body[body.length-1].save_game_name+"'")
-}
-
-
-
-
-
-
 function add_large_ship_data()
 {
   var tables = query("SELECT * FROM LargeShipTable")
@@ -443,3 +385,65 @@ function add_large_ship_data()
     console.log("LARGE SHIP LOADED");
   })
 }
+
+
+
+
+
+////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
+function save_name_game(body)
+{
+  var game_name = body[body.length-1].save_game_name;
+  var save_game_phase = body[body.length-1].save_game_phase;
+  body.pop();//Get rid of save name and phase.
+  var game_id = 0;
+  var team_name_and_id_list = [];
+  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase);
+  var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
+  .then(tables=>{//Get ID
+      tables.forEach(element=>{
+        game_id = element.ID;
+      })
+  })
+  .then(async()=>{//Insert into team table.
+    for(var i =0; i < body.length;i++)
+    {
+      console.log("Pushing: "+body[i].team_name);
+      if(body[i].has_initiative_token == true)
+      {
+        has_init = 1;
+      }
+      else
+      {
+        has_init = 0;
+      }
+      await store_in_save_team_table(game_id,body[i].team_name,has_init);
+    }
+  })//End then #1
+
+
+  .then(()=>{ //Get Team ID's with names.
+       var team_tables = query("SELECT TeamName,TeamID FROM SavedTeamsTable WHERE SavedGameID = '"+game_id+"'")
+       .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
+          team_tables.forEach(element=>{
+            console.log("pushing new team.")
+            team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
+            })
+        })
+        .then(()=>{
+            console.log("TEAM ID DISPLAY!")
+            console.log(team_name_and_id_list);
+        })
+  })//End then #2
+}
+
+function overwrite_game(body)
+{
+ db.run("UPDATE GameIdentifiers SET GamePhase = '"+body[body.length-1].save_game_phase+"' WHERE GameName = '"+body[body.length-1].save_game_name+"'")
+}
+
+function store_in_save_team_table(game_id,team_name,has_init)
+{
+  db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative) VALUES(?,?,?)",game_id,team_name,has_init)
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
