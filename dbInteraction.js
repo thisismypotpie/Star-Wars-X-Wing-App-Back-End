@@ -10,6 +10,7 @@ const pilot_page = require('./JS Data Classes/Pilot-Variants');
 const card_page = require('./JS Data Classes/card-Variants');
 const http = require('http');
 const { brotliDecompress } = require('zlib');
+const { resolve } = require('path');
 /**
  * End Require Section
  */
@@ -27,6 +28,7 @@ var game_data = {
   all_conditions:[],
   all_upgrades:[],
 };
+
 /**
   * End Define Global Variables Section
   */
@@ -65,7 +67,7 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      save_name_game(body);
+      save_game(body)  
     })
     response.end('ok');
   }
@@ -391,21 +393,45 @@ function add_large_ship_data()
 
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
-function save_name_game(body)
+function save_game(body)
 {
   var game_name = body[body.length-1].save_game_name;
   var save_game_phase = body[body.length-1].save_game_phase;
-  body.pop();//Get rid of save name and phase.
   var game_id = 0;
   var team_name_and_id_list = [];
-  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase);
+  body.pop();//Get rid of save name and phase.
+
+  insert_save_game_info(game_name,save_game_phase)
+  /*.then(()=>{get_save_game_id(game_name)})
+  .then(id=>{ game_id = id})
+  .then(()=>{console.log("Game id is: "+game_id)}) 
+  .then(insert_teams_into_table(body,game_id))
+  .then(()=>{create_team_name_id_list()})
+  .then(list=>{team_name_and_id_list = list})*/
+  return team_name_and_id_list;
+}
+
+
+function insert_save_game_info(game_name,save_game_phase)
+{
+  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase)
+}
+
+function get_save_game_id(game_name)
+{
+  console.log("starting function in question.")
+  var game_id = 0;
   var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
   .then(tables=>{//Get ID
-      tables.forEach(element=>{
-        game_id = element.ID;
-      })
+        console.log("tables: "+tables);
+        //game_id = tables.ID;
+        return game_id;
   })
-  .then(()=>{//Insert into team table.
+   return game_id;
+}
+
+  function insert_teams_into_table(body,game_id)
+  {
     for(var i =0; i < body.length;i++)
     {
       console.log("Pushing: "+body[i].team_name);
@@ -418,44 +444,51 @@ function save_name_game(body)
         has_init = 0;
       }
       var turnOrder = (i+1);
-      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder);
+      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder)
     }
-  })//End then #1
+  }
 
+  function create_team_name_id_list()
+  {
+    var team_name_and_id_list=[];
+    var team_tables = query("SELECT * FROM SavedTeamsTable") //WHERE SavedGameID = '"+game_id+"'")
+    .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
+      console.log("team tables lengh: "+team_tables.length) ;
+      team_tables.forEach(element=>{
+         console.log("pushing new team.")
+         team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
+         })
+     })
+     return team_name_and_id_list;
+  }
 
-  .then(()=>{ //Get Team ID's with names.
-       var team_tables = query("SELECT TeamName,TeamID FROM SavedTeamsTable WHERE SavedGameID = '"+game_id+"'")
-       .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
-          team_tables.forEach(element=>{
-            console.log("pushing new team.")
-            team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
-            })
-        })
-        .then(()=>{//Store ships in the 
-            console.log("TEAM ID DISPLAY!")
-            console.log(team_name_and_id_list);
-            for(var i=0; i < body.length;i++)
-            {
-              for(var j=0; i < body[i].ship_list.length;j++)
-              {
-                  var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
-                  if(current_ship.ship_name.ship_type == "largeTwoCard")
-                  {
-                    
-                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
-                  }
-                  else if(current_ship.ship_name.ship_type == "largeOneCard")
-                  {
-                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
-                  }
-                  else
-                  {
-                    db.run("INSERT INTO SavedShips(ShipID,TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
-                  }
-              }
-            }
-        })
-  })//End then #2
+function store_ships_in_db()
+{
+    console.log("Length: "+team_name_and_id_list.length);
+    console.log("TEAM ID DISPLAY!")
+    console.log(team_name_and_id_list);
+    for(var i=0; i < body.length;i++)
+    {
+      for(var j=0; i < body[i].ship_list.length;j++)
+      {
+          var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
+          var TeamID = 1;//placeholder.
+          if(current_ship.ship_name.ship_type == "largeTwoCard")
+          {
+            
+            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+          }
+          else if(current_ship.ship_name.ship_type == "largeOneCard")
+          {
+            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+          }
+          else
+          {
+            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+                                      
+          }
+      }
+    }
 }
 
 function overwrite_game(body)
