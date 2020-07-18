@@ -401,16 +401,21 @@ function save_game(body)
   var team_name_and_id_list = [];
   body.pop();//Get rid of save name and phase.
 
-  insert_save_game_info(game_name,save_game_phase)
-  /*.then(()=>{get_save_game_id(game_name)})
-  .then(id=>{ game_id = id})
-  .then(()=>{console.log("Game id is: "+game_id)}) 
-  .then(insert_teams_into_table(body,game_id))
-  .then(()=>{create_team_name_id_list()})
-  .then(list=>{team_name_and_id_list = list})*/
-  return team_name_and_id_list;
+    const savePromise = (new Promise((resolve, reject) => (insert_save_game_info(game_name, save_game_phase)))
+    .then(new Promise((resolve, reject) => get_save_game_id(game_name)))
+    .then(result => {console.log(`In this moment, game_id is ${game_id} and result is ${result}`); game_id = result } )
+    .then(new Promise((resolve, reject) => insert_teams_into_table(body, game_id)))
+    .then(new Promise((resolve, reject) => create_team_name_id_list()))
+    .then(result => team_name_and_id_list = result)
+    .then(console.log(team_name_and_id_list))
+    .catch(err => console.log(err)))
+  
+  //insert_save_game_info(game_name,save_game_phase)
+  //game_id = get_save_game_id(game_name)
+  //insert_teams_into_table(body,game_id)
+  //team_name_and_id_list = create_team_name_id_list()
+  //console.log(team_name_and_id_list)
 }
-
 
 function insert_save_game_info(game_name,save_game_phase)
 {
@@ -423,10 +428,12 @@ function get_save_game_id(game_name)
   var game_id = 0;
   var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
   .then(tables=>{//Get ID
-        console.log("tables: "+tables);
-        //game_id = tables.ID;
-        return game_id;
+        for(var propName in tables) {
+            game_id = tables[propName].ID
+            return game_id;
+        }
   })
+  .catch(err => console.log(err))
    return game_id;
 }
 
