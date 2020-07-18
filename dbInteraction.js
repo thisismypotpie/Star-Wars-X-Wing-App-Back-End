@@ -11,6 +11,7 @@ const card_page = require('./JS Data Classes/card-Variants');
 const http = require('http');
 const { brotliDecompress } = require('zlib');
 const { resolve } = require('path');
+const { table } = require('console');
 /**
  * End Require Section
  */
@@ -393,7 +394,7 @@ function add_large_ship_data()
 
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
-function save_game(body)
+async function save_game(body)
 {
   var game_name = body[body.length-1].save_game_name;
   var save_game_phase = body[body.length-1].save_game_phase;
@@ -401,20 +402,27 @@ function save_game(body)
   var team_name_and_id_list = [];
   body.pop();//Get rid of save name and phase.
 
-  insert_save_game_info(game_name,save_game_phase)
-  /*.then(()=>{get_save_game_id(game_name)})
-  .then(id=>{ game_id = id})
+  insert_save_game_info(game_name,save_game_phase);
+  game_id = await get_save_game_id(game_name);
+  console.log("Game id is: "+game_id);
+  insert_teams_into_table(body,game_id,0);
+  team_name_and_id_list =  create_team_name_id_list();
+  for(pair in team_name_and_id_list)
+  {
+    console.log(pair);
+  }
+  //.then(get_save_game_id(game_name))
+  /*.then(id=>{ game_id = id})
   .then(()=>{console.log("Game id is: "+game_id)}) 
   .then(insert_teams_into_table(body,game_id))
   .then(()=>{create_team_name_id_list()})
   .then(list=>{team_name_and_id_list = list})*/
-  return team_name_and_id_list;
 }
 
 
 function insert_save_game_info(game_name,save_game_phase)
 {
-  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase)
+  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase);
 }
 
 function get_save_game_id(game_name)
@@ -423,19 +431,23 @@ function get_save_game_id(game_name)
   var game_id = 0;
   var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
   .then(tables=>{//Get ID
-        console.log("tables: "+tables);
-        //game_id = tables.ID;
-        return game_id;
+    for(element in tables)
+    {
+      game_id = element.ID;
+    }
+    console.log("Game ID being sent back: "+ game_id);
+    return game_id;
   })
-   return game_id;
 }
 
-  function insert_teams_into_table(body,game_id)
+  function insert_teams_into_table(body,game_id,index)
   {
-    for(var i =0; i < body.length;i++)
+    if(index == body.length)
     {
-      console.log("Pushing: "+body[i].team_name);
-      if(body[i].has_initiative_token == true)
+      return;
+    }
+      console.log("Pushing: "+body[index].team_name);
+      if(body[index].has_initiative_token == true)
       {
         has_init = 1;
       }
@@ -443,10 +455,10 @@ function get_save_game_id(game_name)
       {
         has_init = 0;
       }
-      var turnOrder = (i+1);
-      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder)
+      var turnOrder = (index+1);
+      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[index].team_name,has_init,turnOrder)
+      insert_save_game_info(body,game_id,index++);
     }
-  }
 
   function create_team_name_id_list()
   {
@@ -455,7 +467,7 @@ function get_save_game_id(game_name)
     .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
       console.log("team tables lengh: "+team_tables.length) ;
       team_tables.forEach(element=>{
-         console.log("pushing new team.")
+         console.log("pushing team: "+ element.TeamName);
          team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
          })
      })
