@@ -393,52 +393,51 @@ function add_large_ship_data()
 
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
-function save_game(body)
+async function save_game(body)
 {
   var game_name = body[body.length-1].save_game_name;
   var save_game_phase = body[body.length-1].save_game_phase;
   var game_id = 0;
   var team_name_and_id_list = [];
   body.pop();//Get rid of save name and phase.
+    
 
     const savePromise = (new Promise((resolve, reject) => (insert_save_game_info(game_name, save_game_phase)))
-    .then(new Promise((resolve, reject) => get_save_game_id(game_name)))
-    .then(result => {console.log(`In this moment, game_id is ${game_id} and result is ${result}`); game_id = result } )
-    .then(new Promise((resolve, reject) => insert_teams_into_table(body, game_id)))
-    .then(new Promise((resolve, reject) => create_team_name_id_list()))
-    .then(result => team_name_and_id_list = result)
+    .then(game_id = await get_save_game_id(game_name))
+    .then(await insert_teams_into_table(body, game_id))
+    .then(team_name_and_id_list = await create_team_name_id_list())
     .then(console.log(team_name_and_id_list))
     .catch(err => console.log(err)))
-  
-  //insert_save_game_info(game_name,save_game_phase)
-  //game_id = get_save_game_id(game_name)
-  //insert_teams_into_table(body,game_id)
-  //team_name_and_id_list = create_team_name_id_list()
-  //console.log(team_name_and_id_list)
 }
+  
 
 function insert_save_game_info(game_name,save_game_phase)
 {
+  console.log("Begin insert_save_game_info...")
   db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase)
+  console.log("END insert_save_game_info...")
 }
 
-function get_save_game_id(game_name)
+async function get_save_game_id(game_name)
 {
-  console.log("starting function in question.")
+  console.log("Begin get_save_game_id...")
   var game_id = 0;
-  var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
+  const tables = await query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
   .then(tables=>{//Get ID
         for(var propName in tables) {
             game_id = tables[propName].ID
+            console.log(`In get_save_game_id, before returning, game_id is ${game_id}`)
             return game_id;
         }
   })
   .catch(err => console.log(err))
+  console.log(`END get_save_game_id... game_id is now ${game_id}`)
    return game_id;
 }
 
-  function insert_teams_into_table(body,game_id)
+  async function insert_teams_into_table(body,game_id)
   {
+    console.log("Begin insert_teams_into_table...")
     for(var i =0; i < body.length;i++)
     {
       console.log("Pushing: "+body[i].team_name);
@@ -453,10 +452,12 @@ function get_save_game_id(game_name)
       var turnOrder = (i+1);
       db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder)
     }
+    console.log("END insert_teams_into_table...")
   }
 
-  function create_team_name_id_list()
+  async function create_team_name_id_list()
   {
+    console.log("Begin create_team_name_id_list...")
     var team_name_and_id_list=[];
     var team_tables = query("SELECT * FROM SavedTeamsTable") //WHERE SavedGameID = '"+game_id+"'")
     .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
@@ -466,6 +467,7 @@ function get_save_game_id(game_name)
          team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
          })
      })
+     console.log("END create_team_name_id_list...")
      return team_name_and_id_list;
   }
 
