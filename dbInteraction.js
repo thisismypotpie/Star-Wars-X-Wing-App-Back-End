@@ -11,6 +11,7 @@ const card_page = require('./JS Data Classes/card-Variants');
 const http = require('http');
 const { brotliDecompress } = require('zlib');
 const { resolve } = require('path');
+const { table } = require('console');
 /**
  * End Require Section
  */
@@ -274,10 +275,6 @@ function query(sql,args)
   })
 }
 
-
-
-
-
 function establish_database_connection(db_connection_name)
 {
 if(db_connection_name == "game_data")
@@ -399,8 +396,7 @@ async function save_game(body)
   var save_game_phase = body[body.length-1].save_game_phase;
   var game_id = 0;
   var team_name_and_id_list = [];
-  body.pop();//Get rid of save name and phase.
-    
+  body.pop();//Get rid of save name and phase
 
   const savePromise = (new Promise((resolve, reject) => (insert_save_game_info(game_name, save_game_phase)))
   .then(game_id = await get_save_game_id(game_name))
@@ -416,6 +412,7 @@ function insert_save_game_info(game_name,save_game_phase)
   console.log("Begin insert_save_game_info...")
   db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase)
   console.log("END insert_save_game_info...")
+  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase);
 }
 
 async function get_save_game_id(game_name)
@@ -439,9 +436,25 @@ async function get_save_game_id(game_name)
   {
     console.log("Begin insert_teams_into_table...")
     for(var i =0; i < body.length;i++)
+  var tables = query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
+  .then(tables=>{//Get ID
+    for(element in tables)
     {
-      console.log("Pushing: "+body[i].team_name);
-      if(body[i].has_initiative_token == true)
+      game_id = element.ID;
+    }
+    console.log("Game ID being sent back: "+ game_id);
+    return game_id;
+  })
+}
+
+  function insert_teams_into_table(body,game_id,index)
+  {
+    if(index == body.length)
+    {
+      return;
+    }
+      console.log("Pushing: "+body[index].team_name);
+      if(body[index].has_initiative_token == true)
       {
         has_init = 1;
       }
@@ -449,8 +462,9 @@ async function get_save_game_id(game_name)
       {
         has_init = 0;
       }
-      var turnOrder = (i+1);
-      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[i].team_name,has_init,turnOrder)
+      var turnOrder = (index+1);
+      db.run("INSERT INTO SavedTeamsTable(SavedGameID,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_id,body[index].team_name,has_init,turnOrder)
+      insert_save_game_info(body,game_id,index++);
     }
     console.log("END insert_teams_into_table...")
   }
@@ -463,7 +477,7 @@ async function get_save_game_id(game_name)
     .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
       console.log("team tables lengh: "+team_tables.length) ;
       team_tables.forEach(element=>{
-         console.log("pushing new team.")
+         console.log("pushing team: "+ element.TeamName);
          team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
          })
      })
