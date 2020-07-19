@@ -12,7 +12,7 @@ module.exports.condition = condition;
 class criticalHitCard{
     constructor(name, image_path,id)
     {
-        this.nam = name;
+        this.name = name;
         this.image_path = image_path;
         this.id = id;
     }

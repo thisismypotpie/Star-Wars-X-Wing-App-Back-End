@@ -8,6 +8,8 @@ const maneuver_page = require('./JS Data Classes/Maneuvers.js');
 const pilot_page = require('./JS Data Classes/Pilot-Variants');
 const card_page = require('./JS Data Classes/card-Variants');
 const http = require('http');
+const { parse } = require('path');
+const { Console } = require('console');
 
 /**
  * End Require Section
@@ -23,6 +25,7 @@ var game_data = {
   ship_list:[],
   all_pilots:[],
   all_crit_cards:[],
+  all_large_crit_hit_cards:[],
   all_conditions:[],
   all_upgrades:[],
 };
@@ -47,6 +50,7 @@ const server = http.createServer(function(request, response){
     get_crit_cards_data();
     get_condition_data();
     get_upgrade_data();   
+    get_large_crit_hit_data();
     get_maneuver_data();
     //I needed to use chain function calling here because I was not able to achieve the load order that I wanted in any other way. 
     //Therefore, each function will call the next one within its promise to ensure the load order of the database while the response
@@ -65,7 +69,7 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      save_game(body)  
+      setTimeout(()=>{save_game(body)},10000);  
     })
     response.end('ok');
   }
@@ -81,7 +85,7 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      overwrite_game(body);
+      setTimeout(()=>{overwrite_game(body)},3000);
     })
     response.end('ok');
   }
@@ -249,6 +253,19 @@ function get_crit_cards_data()
   })
 }
 
+function get_large_crit_hit_data()
+{
+  var large_crit_hits = [];
+  var tables = query("SELECT * FROM LargeShipCritHitCards").then( tables=>{
+    tables.forEach(element=>{
+      large_crit_hits.push(new card_page.criticalHitCard(element.CardName,element.ImagePath,element.ID));
+    })
+    console.log("LARGE CRITICAL HIT CARD COMPLETE. LENGTH: "+large_crit_hits.length);
+    game_data.all_large_crit_hit_cards = large_crit_hits;
+    return large_crit_hits;
+  })
+}
+
 function get_game_names()
 {
   var names = [];
@@ -343,17 +360,16 @@ function add_large_ship_data()
     })
   })
       //Get the aft and fore critical hit cards for each ship.
-      var foreList = element.FrontCritImages.split('\n');
-      var aftList = element.RearCritImages.split('\n');
-      foreList.forEach(element => {
-        var card_elements = element.split('*');
-        fore_crit_cards.push(new card_page.criticalHitCard(card_elements[1], card_elements[0]));
-      })
-      aftList.forEach(element => {
-        var card_elements = element.split('*');
-        aft_crit_cards.push(new card_page.criticalHitCard(card_elements[1], card_elements[0]));
-      })
-  
+      var fore_crit_cards = element.FrontCritImages.split('*');
+      for(var i=0; i < fore_crit_cards.length;i++)
+      {
+        fore_crit_cards[i]  = parseInt(fore_crit_cards[i],10);
+      }
+      var aft_crit_cards = element.RearCritImages.split('*');
+      for(var i=0; i < aft_crit_cards.length;i++)
+      {
+        aft_crit_cards[i]  = parseInt(aft_crit_cards[i],10);
+      }
   
       if(element.LargeShipType == "largeTwoCard")
       {
@@ -396,7 +412,6 @@ async function save_game(body)
   insert_save_game_info(game_name, save_game_phase);
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
-  insert_ships_in_db(game_name);
 }
 
 function insert_save_game_info(game_name,save_game_phase)
@@ -424,43 +439,66 @@ function insert_save_game_info(game_name,save_game_phase)
     console.log("END insert_teams_into_table...")
   }
 
-function insert_ships_in_db(game_name)
+function insert_ships_in_db(body,game_name)
 {
-    console.log("Length: "+team_name_and_id_list.length);
-    console.log("TEAM ID DISPLAY!")
-    console.log(team_name_and_id_list);
     for(var i=0; i < body.length;i++)
     {
-      for(var j=0; i < body[i].ship_list.length;j++)
+      console.log("Team number = "+(i+1));
+      for(var j=0; j < body[i].ship_list.length;j++)
       {
+          console.log("Ship number = "+(j+1));
           var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
-          var turnOrder = i+1;
+          var turnOrder = j+1;
           var upgrade_numbers = "";
+          var crit_hit_numbers = "";
           var condition_numbers = "";
-          for(var j =0; j < current_ship.upgrades.length;j++)
+          var aft_showing = 0;
+          var chosen_maneuver = null;
+          for(var k =0; k < current_ship.upgrades.length;k++)
           {
-            upgrade_numbers+=current_ship.upgrades[j].id+"\n";
+            upgrade_numbers+=current_ship.upgrades[k].id+"*";
           }
-          for(var j=0; i < current_ship.conditions.length;j++)
+          for(var k=0; k < current_ship.critical_hit_cards.length;k++)
           {
-            condition_numbers+=current_ship.conditions[j].id;
+            crit_hit_numbers+=current_ship.critical_hit_cards[k].id+"*";
           }
-
-          if(current_ship.ship_name.ship_type == "largeTwoCard")
-          {          
-            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
-          }
-          else if(current_ship.ship_name.ship_type == "largeOneCard")
+          for(var k=0; k < current_ship.conditions.length;k++)
           {
-            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+            condition_numbers+=current_ship.conditions[k].id+"*";
+          }
+          if(current_ship.chosen_maneuver)
+          {
+            chosen_maneuver = current_ship.chosen_maneuver.id;
+          }
+          if(current_ship.aft_showing == true)
+          {
+            aft_showing = 1;
           }
           else
           {
-            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,upgrade_numbers);
-                                                //         //       //       //
+            aft_showing = 0;
+          }
+
+
+          if(current_ship.chosen_pilot.ship_name.ship_type == "largeTwoCard")
+          {    
+            console.log("INSERTING LARGE SHIP TWO CARDS!");      
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,upgrade_numbers,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill,current_ship.current_energy,current_ship.current_aft_agility,current_ship.current_aft_shields, current_ship.current_aft_hull,aft_showing);
+          }
+          else if(current_ship.chosen_pilot.ship_name.ship_type == "largeOneCard")
+          {
+            console.log("INSERTING LARGE SHIP ONE CARD!");
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,upgrade_numbers,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill,current_ship.current_energy);
+          }
+          else
+          {
+            console.log("INSERTING NORMAL SHIP!");
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,upgrade_numbers,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill);
+                                    //         1           2         3        4         5            6           7          8             9             10          11               12              13         14             15              16            17          18           19             20             21            22            23                                                                  1              2                  3            4                5                 6                    7                            8                    9                    10                         11                              12                            13                       14                           15                            17                         18                        19                        20                           21                           22                            23                         24
           }
       }
     }
+    console.log("ALL DONE WITH SHIPS!");
 }
 
 function overwrite_game(body)
