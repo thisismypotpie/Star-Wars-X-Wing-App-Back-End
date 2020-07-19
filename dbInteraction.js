@@ -396,6 +396,7 @@ async function save_game(body)
   insert_save_game_info(game_name, save_game_phase);
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
+  insert_ships_in_db(game_name);
 }
 
 function insert_save_game_info(game_name,save_game_phase)
@@ -423,7 +424,7 @@ function insert_save_game_info(game_name,save_game_phase)
     console.log("END insert_teams_into_table...")
   }
 
-function insert_ships_in_db()
+function insert_ships_in_db(game_name)
 {
     console.log("Length: "+team_name_and_id_list.length);
     console.log("TEAM ID DISPLAY!")
@@ -433,20 +434,30 @@ function insert_ships_in_db()
       for(var j=0; i < body[i].ship_list.length;j++)
       {
           var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
-          var TeamID = 1;//placeholder.
-          if(current_ship.ship_name.ship_type == "largeTwoCard")
+          var turnOrder = i+1;
+          var upgrade_numbers = "";
+          var condition_numbers = "";
+          for(var j =0; j < current_ship.upgrades.length;j++)
           {
-            
-            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+            upgrade_numbers+=current_ship.upgrades[j].id+"\n";
+          }
+          for(var j=0; i < current_ship.conditions.length;j++)
+          {
+            condition_numbers+=current_ship.conditions[j].id;
+          }
+
+          if(current_ship.ship_name.ship_type == "largeTwoCard")
+          {          
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
           }
           else if(current_ship.ship_name.ship_type == "largeOneCard")
           {
-            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
           }
           else
           {
-            db.run("INSERT INTO SavedShips(TeamID,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",);
-                                      
+            db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,Upgrades,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,upgrade_numbers);
+                                                //         //       //       //
           }
       }
     }
