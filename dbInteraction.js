@@ -393,17 +393,10 @@ async function save_game(body)
   var save_game_phase = body[body.length-1].save_game_phase;
   body.pop();//Get rid of save name and phase
 
-  insert_save_game_info(game_name, save_game_phase)
-  insert_teams_into_table(body, game_name)
-  create_team_name_id_list(body,game_name)
+  insert_save_game_info(game_name, save_game_phase);
+  insert_teams_into_table(body, game_name);
+  insert_ships_in_db(body,game_name);
 }
-
-function excuteQuery(query,callback)
-{
-  
-   return callback(null,rows);
-}
-
 
 function insert_save_game_info(game_name,save_game_phase)
 {
@@ -413,11 +406,10 @@ function insert_save_game_info(game_name,save_game_phase)
 
   function insert_teams_into_table(body,game_name)
   {
-    var insert_parameters = [];
     for(var i=0; i < body.length;i++)
     {
-      console.log("Pushing: "+body[index].team_name);
-      if(body[index].has_initiative_token == true)
+      console.log("Pushing: "+body[i].team_name);
+      if(body[i].has_initiative_token == true)
       {
         has_init = 1;
       }
@@ -425,13 +417,13 @@ function insert_save_game_info(game_name,save_game_phase)
       {
         has_init = 0;
       }
-      insert_parameters.push(game_name,body[i].team_name,has_init,turnOrder);
+      var turnOrder = i+1;
+      db.run("INSERT INTO SavedTeamsTable(SavedGameName,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_name,body[i].team_name,has_init,turnOrder);
     }
-    db.run("INSERT INTO SavedTeamsTable(SavedGameName,TeamName,HasInitiative,TurnOrder) VALUES(?)",insert_parameters);
     console.log("END insert_teams_into_table...")
   }
 
-function store_ships_in_db()
+function insert_ships_in_db()
 {
     console.log("Length: "+team_name_and_id_list.length);
     console.log("TEAM ID DISPLAY!")
