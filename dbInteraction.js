@@ -402,12 +402,12 @@ async function save_game(body)
   body.pop();//Get rid of save name and phase.
     
 
-    const savePromise = (new Promise((resolve, reject) => (insert_save_game_info(game_name, save_game_phase)))
-    .then(game_id = await get_save_game_id(game_name))
-    .then(await insert_teams_into_table(body, game_id))
-    .then(team_name_and_id_list = await create_team_name_id_list())
-    .then(console.log(team_name_and_id_list))
-    .catch(err => console.log(err)))
+  const savePromise = (new Promise((resolve, reject) => (insert_save_game_info(game_name, save_game_phase)))
+  .then(game_id = await get_save_game_id(game_name))
+  .then(await insert_teams_into_table(body, game_id))
+  .then(team_name_and_id_list = await create_team_name_id_list())
+  .then(console.log(`team_name_and_id_list in save_game()'s scope at end of promise chain is:\n`)).then(console.log(team_name_and_id_list))
+  .catch(err => console.log(err)))
 }
   
 
@@ -423,7 +423,7 @@ async function get_save_game_id(game_name)
   console.log("Begin get_save_game_id...")
   var game_id = 0;
   const tables = await query("SELECT ID FROM GameIdentifiers WHERE GameName = '"+game_name+"'")
-  .then(tables=>{//Get ID
+  .then(tables=>{//Get ID, only one prop
         for(var propName in tables) {
             game_id = tables[propName].ID
             console.log(`In get_save_game_id, before returning, game_id is ${game_id}`)
@@ -459,7 +459,7 @@ async function get_save_game_id(game_name)
   {
     console.log("Begin create_team_name_id_list...")
     var team_name_and_id_list=[];
-    var team_tables = query("SELECT * FROM SavedTeamsTable") //WHERE SavedGameID = '"+game_id+"'")
+    const team_tables = await query("SELECT * FROM SavedTeamsTable") //WHERE SavedGameID = '"+game_id+"'")
     .then(team_tables=>{ //From here on out we will have to do a promise within a promise to keep order to events.
       console.log("team tables lengh: "+team_tables.length) ;
       team_tables.forEach(element=>{
@@ -467,7 +467,6 @@ async function get_save_game_id(game_name)
          team_name_and_id_list.push({team_name: element.TeamName, ID: parseInt(element.TeamID,10)});
          })
      })
-     console.log("END create_team_name_id_list...")
      return team_name_and_id_list;
   }
 
