@@ -69,9 +69,9 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      setTimeout(()=>{save_game(body)},10000);  
+      save_game(body); 
     })
-    response.end('ok');
+    setTimeout(()=>{response.end('ok')},10000); 
   }
   else if(request.url == "/load_game")//Load a game.
   {
@@ -85,9 +85,10 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      setTimeout(()=>{overwrite_game(body)},3000);
+      //overwrite_game(body);
+      delete_old_data(body);
     })
-    response.end('ok');
+    setTimeout(()=>{response.end('ok')},10000);
   }
   else if(request.url == "/get_game_names")//get all names of currently saved games.
   {
@@ -500,10 +501,22 @@ function insert_ships_in_db(body,game_name)
     }
     console.log("ALL DONE WITH SHIPS!");
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function overwrite_game(body)
 {
- db.run("UPDATE GameIdentifiers SET GamePhase = '"+body[body.length-1].save_game_phase+"' WHERE GameName = '"+body[body.length-1].save_game_name+"'")
+  delete_old_data(body);
+  save_game(body);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////FUNCTIONS FOR DELETEING OLD DATA/////////////////////////////////////////////////////////////////////////
+function delete_old_data(body)
+{
+  var game_name = body[body.length-1].save_game_name;
+  db.run("DELETE FROM GameIdentifiers WHERE GameName = '"+game_name+"'");
+  db.run("DELETE FROM SavedTeamsTable WHERE SavedGameName = '"+game_name+"'");
+  db.run("DELETE FROM SavedShips WHERE SaveGameName = '"+game_name+"'");
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
