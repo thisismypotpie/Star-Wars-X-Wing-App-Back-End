@@ -85,8 +85,8 @@ const server = http.createServer(function(request, response){
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
-      //overwrite_game(body);
-      delete_old_data(body);
+      overwrite_game(body);
+      //delete_old_data(body);
     })
     setTimeout(()=>{response.end('ok')},10000);
   }
@@ -506,7 +506,7 @@ function insert_ships_in_db(body,game_name)
 function overwrite_game(body)
 {
   delete_old_data(body);
-  save_game(body);
+  setTimeout(()=>{save_game(body)},1000);
 }
 
 
