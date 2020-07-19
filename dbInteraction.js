@@ -275,10 +275,6 @@ function query(sql,args)
   })
 }
 
-
-
-
-
 function establish_database_connection(db_connection_name)
 {
 if(db_connection_name == "game_data")
