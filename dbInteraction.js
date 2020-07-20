@@ -82,13 +82,16 @@ const server = http.createServer(function(request, response){
   {
     establish_database_connection("saved_games");
     let body = '';
+    loading_raw_data.game_phase = "";
+    loading_raw_data.team_data = [];
+    loading_raw_data.ship_data = [];
     request.on('data', chunk => {
     body += chunk.toString();});
     request.on('end', () => {
       body = JSON.parse(body);
       load_game(body);
     })
-    setTimeout(()=>{response.end(JSON.stringify(loading_raw_data))},10000);
+    setTimeout(()=>{response.end(JSON.stringify(loading_raw_data))},3000);
   }
   else if(request.url == "/overwrite_game")//overwite a game.
   {
@@ -544,19 +547,19 @@ function load_game(body)
 {
     var game_name = body;
     console.log("game name is: "+game_name);
-    var game_phase = query("SELECT GamePhase FROM GameIdentifiers WHERE GameName = '"+game_name+"'").then( game_phase=>{
+      query("SELECT GamePhase FROM GameIdentifiers WHERE GameName = ?",game_name).then( game_phase=>{
       game_phase.forEach(element=>{
         loading_raw_data.game_phase = element.GamePhase;
       })
       })
-    var team_names = query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = '"+game_name+"'ORDERBY TurnOrder Asc").then( team_names=>{
+        query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = ? ORDER BY TurnOrder Asc",game_name).then( team_names=>{
         team_names.forEach(element=>{
-          team_data.push(element);
+        loading_raw_data.team_data.push(element);
         })
     })
-    var ships = query("SELECT * FROM SavedShips WHERE SaveGameName = '"+game_name+"'ORDERBY TurnOrder Asc").then(ships=>{
+        query("SELECT * FROM SavedShips WHERE SaveGameName = ? ORDER BY TurnOrder Asc",game_name).then(ships=>{
         ships.forEach(element=>{
-          ship_data.push(ships);
+        loading_raw_data.ship_data.push(ships);
         })
     })
 }
