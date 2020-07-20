@@ -426,15 +426,33 @@ async function save_game(body)
   var save_game_phase = body[body.length-1].save_game_phase;
   body.pop();//Get rid of save name and phase
 
-  insert_save_game_info(game_name, save_game_phase);
+  insert_save_game_info(game_name);
+  insert_turn_info(game_name,save_game_phase);
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
 }
 
-function insert_save_game_info(game_name,save_game_phase)
+function insert_turn_info(game_name,save_game_phase)
+{
+  if(save_game_phase.phase == "attack" || save_game_phase.phase == "movement")
+  {
+    db.run("INSERT INTO TurnInfo(SaveGameName,Phase,MovementAttackIndex) VALES(?,?,?)",game_name,save_game_phase.phase,save_game_phase.movement_attack_index);
+  }
+  else if(save_game_phase.phase == "maneuver-selection")
+  {
+    db.run("INSERT INTO TurnInfo(SaveGameName,Phase,TeamIndex,ShipIndex) VALUES(?,?,?,?)",game_name,save_game_phase.phase,save_game_phase.team_index,save_game_phase.ship_index)
+  }
+  else//pre-game squad building
+  {
+    db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
+  }
+   console.log(save_game_phase);
+}
+
+function insert_save_game_info(game_name)
 {
   console.log("Begin insert_save_game_info...")
-  db.run("INSERT INTO GameIdentifiers(GameName,GamePhase) VALUES(?,?)",game_name,save_game_phase)
+  db.run("INSERT INTO GameIdentifiers(GameName) VALUES(?)",game_name);
 }
 
   function insert_teams_into_table(body,game_name)
@@ -533,7 +551,7 @@ function delete_old_data(body)
   db.run("DELETE FROM GameIdentifiers WHERE GameName = '"+game_name+"'");
   db.run("DELETE FROM SavedTeamsTable WHERE SavedGameName = '"+game_name+"'");
   db.run("DELETE FROM SavedShips WHERE SaveGameName = '"+game_name+"'");
-
+  db.run("DELETE FROM TurnInfo WHERE SaveGameName = '"+game_name+"'");
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
