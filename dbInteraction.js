@@ -436,7 +436,7 @@ function insert_turn_info(game_name,save_game_phase)
 {
   if(save_game_phase.phase == "attack" || save_game_phase.phase == "movement")
   {
-    db.run("INSERT INTO TurnInfo(SaveGameName,Phase,MovementAttackIndex) VALES(?,?,?)",game_name,save_game_phase.phase,save_game_phase.movement_attack_index);
+    db.run("INSERT INTO TurnInfo(SaveGameName,Phase,MovementAttackIndex) VALUES(?,?,?)",game_name,save_game_phase.phase,save_game_phase.movement_attack_index);
   }
   else if(save_game_phase.phase == "maneuver-selection")
   {
