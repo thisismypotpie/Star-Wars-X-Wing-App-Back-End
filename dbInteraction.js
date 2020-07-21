@@ -32,7 +32,8 @@ var game_data = {
 var loading_raw_data={
   team_data: [],
   ship_data: [],
-  turn_data:[]
+  turn_data:[],
+  target_lock_data:[]
 }
 
 /**
@@ -431,9 +432,12 @@ async function save_game(body)
   insert_turn_info(game_name,save_game_phase);
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
-  if(target_locks.length > 0)
+  if(target_locks !=null && target_locks != undefined)
   {
-    insert_target_locks_in_db(game_name,target_locks);
+    if(target_locks.length>0)
+    {
+      insert_target_locks_in_db(game_name,target_locks);
+    }
   }
 }
 
@@ -593,4 +597,9 @@ function load_game(body)
       loading_raw_data.turn_data.push(element);
       })
   })
+        query("SELECT * FROM TargetLockList WHERE SaveGameName = ?",game_name).then(locks=>{
+        locks.forEach(element=>{
+        loading_raw_data.target_lock_data.push(element);
+    })
+})
 }
