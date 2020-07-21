@@ -30,9 +30,9 @@ var game_data = {
   all_upgrades:[],
 };
 var loading_raw_data={
-  game_phase: "",
   team_data: [],
-  ship_data: []
+  ship_data: [],
+  turn_data:[]
 }
 
 /**
@@ -424,12 +424,24 @@ async function save_game(body)
 {
   var game_name = body[body.length-1].save_game_name;
   var save_game_phase = body[body.length-1].save_game_phase;
+  var target_locks = body[body.length-1].target_locks;
   body.pop();//Get rid of save name and phase
 
   insert_save_game_info(game_name);
   insert_turn_info(game_name,save_game_phase);
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
+  if(target_locks.length > 0)
+  {
+    insert_target_locks_in_db(game_name,target_locks);
+  }
+}
+
+function insert_target_locks_in_db(game_name,target_locks)
+{
+  target_locks.forEach(lock=>{
+    db.run("INSERT INTO TargetLockList(SaveGameName,assignmentNumber,targettingTeamName,targettingRoster,targettedTeamName,targettedRoster) VALUES(?,?,?,?,?,?)",game_name,lock.assignment_number, lock.targetting_team, lock.targetting_roster, lock.targetted_team, lock.targetted_roster);
+  })
 }
 
 function insert_turn_info(game_name,save_game_phase)
@@ -552,6 +564,7 @@ function delete_old_data(body)
   db.run("DELETE FROM SavedTeamsTable WHERE SavedGameName = '"+game_name+"'");
   db.run("DELETE FROM SavedShips WHERE SaveGameName = '"+game_name+"'");
   db.run("DELETE FROM TurnInfo WHERE SaveGameName = '"+game_name+"'");
+  db.run("DELETE FROM TargetLockList WHERE SaveGameName = '"+game_name+"'");
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -565,11 +578,6 @@ function load_game(body)
 {
     var game_name = body;
     console.log("game name is: "+game_name);
-      query("SELECT GamePhase FROM GameIdentifiers WHERE GameName = ?",game_name).then( game_phase=>{
-      game_phase.forEach(element=>{
-        loading_raw_data.game_phase = element.GamePhase;
-      })
-      })
         query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = ? ORDER BY TurnOrder Asc",game_name).then( team_names=>{
         team_names.forEach(element=>{
         loading_raw_data.team_data.push(element);
@@ -580,4 +588,9 @@ function load_game(body)
         loading_raw_data.ship_data.push(ships);
         })
     })
+        query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
+      info.forEach(element=>{
+      loading_raw_data.turn_data.push(element);
+      })
+  })
 }
