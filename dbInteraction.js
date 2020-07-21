@@ -32,7 +32,7 @@ var game_data = {
 var loading_raw_data={
   team_data: [],
   ship_data: [],
-  turn_data:[],
+  turn_data: undefined,
   target_lock_data:[]
 }
 
@@ -83,9 +83,10 @@ const server = http.createServer(function(request, response){
   {
     establish_database_connection("saved_games");
     let body = '';
-    loading_raw_data.game_phase = "";
     loading_raw_data.team_data = [];
     loading_raw_data.ship_data = [];
+    loading_raw_data.target_lock_data = [];
+    loading_raw_data.turn_data = undefined;
     request.on('data', chunk => {
     body += chunk.toString();});
     request.on('end', () => {
@@ -594,7 +595,7 @@ function load_game(body)
     })
         query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
       info.forEach(element=>{
-      loading_raw_data.turn_data.push(element);
+      loading_raw_data.turn_data = element;
       })
   })
         query("SELECT * FROM TargetLockList WHERE SaveGameName = ?",game_name).then(locks=>{
