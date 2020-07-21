@@ -510,17 +510,31 @@ function insert_ships_in_db(body,game_name)
           {
             upgrade_numbers+=current_ship.upgrades[k].id+"*";
           }
+          if(upgrade_numbers.slice(-1)=="*")//trim end of string.
+          {
+            upgrade_numbers = upgrade_numbers.slice(0,-1);
+          }
           for(var k=0; k < current_ship.critical_hit_cards.length;k++)
           {
             crit_hit_numbers+=current_ship.critical_hit_cards[k].id+"*";
+          }
+          if(crit_hit_numbers.slice(-1)=="*")//trim end of string.
+          {
+            cirt_hit_numbers = crit_hit_numbers.slice(0,-1);
           }
           for(var k=0; k < current_ship.conditions.length;k++)
           {
             condition_numbers+=current_ship.conditions[k].id+"*";
           }
-          if(current_ship.chosen_maneuver)
+          if(condition_numbers.slice(-1)=="*")//trim end of string.
           {
-            chosen_maneuver = current_ship.chosen_maneuver.id;
+            condition_numbers = condition_numbers.slice(0,-1);
+          }
+          console.log("chosen maneuver: "+current_ship.chosen_maneuver);
+          if(current_ship.chosen_maneuver!= null && current_ship.chosen_maneuver!= undefined)
+          {
+            console.log("we're in!");
+            chosen_maneuver = current_ship.chosen_maneuver;
           }
           if(current_ship.aft_showing == true)
           {
@@ -590,7 +604,7 @@ function load_game(body)
     })
         query("SELECT * FROM SavedShips WHERE SaveGameName = ? ORDER BY TurnOrder Asc",game_name).then(ships=>{
         ships.forEach(element=>{
-        loading_raw_data.ship_data.push(ships);
+        loading_raw_data.ship_data.push(element);
         })
     })
         query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
