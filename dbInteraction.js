@@ -121,7 +121,7 @@ const server = http.createServer(function(request, response){
     response.end();
   }
 });
-var port = /*process.env.PORT||*/3000;
+var port = process.env.PORT||3000;
 server.listen(port);
 /**
  * End Main Response Function
