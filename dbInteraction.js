@@ -28,7 +28,8 @@ var game_data = {
   all_large_crit_hit_cards:[],
   all_conditions:[],
   all_upgrades:[],
-  all_planets:[]
+  all_planets:[],
+  map_paths:[]
 };
 var loading_raw_data={
   team_data: [],
@@ -60,6 +61,7 @@ const server = http.createServer(function(request, response){
     get_large_crit_hit_data();
     get_maneuver_data();
     get_planet_data();
+    get_map_paths();
     //I needed to use chain function calling here because I was not able to achieve the load order that I wanted in any other way. 
     //Therefore, each function will call the next one within its promise to ensure the load order of the database while the response
     //must wait three seconds before returning to ensure that the game_data object is fully created before returning.
@@ -183,6 +185,19 @@ function get_planet_data()
     console.log("PLANETS LOADED. LENGTH: "+all_planets.length);
     game_data.all_planets = all_planets;
     return all_planets;
+  })
+}
+
+function get_map_paths()
+{
+  var tables = query("SELECT * FROM MapPaths").then( tables=>{
+    var all_paths = [];
+    tables.forEach(element => {
+      all_paths.push({id: element.ID, x_coordinate:element.X_Coordinate, y_coordinate:element.Y_Coordinate});
+    })
+    console.log("MAP PATHS LOADED. LENGTH: "+all_paths.length);
+    game_data.all_paths = all_paths;
+    return all_paths;
   })
 }
 
