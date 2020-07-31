@@ -193,10 +193,10 @@ function get_map_paths()
   var tables = query("SELECT * FROM MapPaths").then( tables=>{
     var all_paths = [];
     tables.forEach(element => {
-      all_paths.push({id: element.ID, x_coordinate:element.X_Coordinate, y_coordinate:element.Y_Coordinate});
+      all_paths.push({x_coordinate:element.X_Coordinate, y_coordinate:element.Y_Coordinate});
     })
     console.log("MAP PATHS LOADED. LENGTH: "+all_paths.length);
-    game_data.all_paths = all_paths;
+    game_data.map_paths = all_paths;
     return all_paths;
   })
 }
