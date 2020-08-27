@@ -125,7 +125,7 @@ const server = http.createServer(function(request, response){
     response.end();
   }
 });
-var port = process.env.PORT||3000;
+var port = /*process.env.PORT||*/3000;
 server.listen(port);
 /**
  * End Main Response Function
@@ -151,7 +151,7 @@ function get_ship_data()
         })
       })
       //Add everything from database and maneuver list to create a new ship.
-      ship_list.push(new ship_page.ship(element.ShipType, element.Name, element.Attack, element.Agility, element.Shields, element.Hull,maneuvers_for_this_ship,element.ManeuverCard,element.Role));
+      ship_list.push(new ship_page.ship(element.ID,element.ShipType, element.Name, element.Attack, element.Agility, element.Shields, element.Hull,maneuvers_for_this_ship,element.ManeuverCard,element.Role));
       });
       console.log("SMALL/MEDUIM SHIP LOADED. LENGTH: "+ship_list.length);
       game_data.ship_list = ship_list;
@@ -257,14 +257,55 @@ function get_upgrade_data(){
   var tables = query("SELECT * FROM UpgradesTable")
   .then(tables=>{
     tables.forEach(element => {
-      if(element.Characteristics != null && Array.from(element.Characteristics.split('*')).includes("Dual"))
+        var ship_specific_names = [];
+        var ship_size_specifics = [];
+        var unique = false;
+        var limited = false;
+        var rebels = false;
+        var imperials = false;
+        var scum = false;
+        //Convert numbers to booleans
+        if(element.Unique == 1)
+        {
+           unique = true;
+        }
+        if(element.Limited == 1)
+        {
+          limited = true;
+        }
+        if(element.RebelFaction == 1)
+        {
+          rebels = true;
+        }
+        if(element.ImperialFaction == 1)
+        {
+          imperials = true;
+        }
+        if(element.ScumFaction == 1)
+        {
+          scum = true;
+        }
+        if(element.ShipSpecific != null)//Set ship specific list.
+        {
+          var holder = element.ShipSpecific.split('\n');
+          for(var i=0; i < holder.length;i++)
+          {
+            ship_specific_names.push(parseInt(holder[i],10));
+          }
+
+        }
+        if(element.ShipSizeSpecific !=null)//Set Ship size specificity list.
+        {
+          ship_size_specifics = element.ShipSizeSpecific.split('\n');
+        }
+      if(element.DualSided ==1)
       {
         console.log(element.Name+" is a dual sided upgrade.");
-        all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath,element.ID));
+        all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.ImagePath,element.ID,unique,limited,ship_specific_names,ship_size_specifics,rebels,imperials,scum,true));
       }
       else
       {
-        all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.Characteristics, element.ImagePath,element.ID));  
+        all_upgrades.push(new card_page.UpgradeCard(element.Name, element.Type, element.Cost, element.ImagePath,element.ID,unique,limited,ship_specific_names,ship_size_specifics,rebels,imperials,scum,false));  
       }
   
     })
@@ -423,7 +464,7 @@ function add_large_ship_data()
       if(element.LargeShipType == "largeTwoCard")
       {
         console.log("pushing one");
-        let ship_to_push = new ship_page.Large_Ship_Two_Cards(element.LargeShipType,element.Name,element.Attack,0,element.ForeShields, 
+        let ship_to_push = new ship_page.Large_Ship_Two_Cards(element.ID,element.LargeShipType,element.Name,element.Attack,0,element.ForeShields, 
           element.ForeHull, maneuvers_for_this_ship, element.Energy,0,element.AftHull, element.AftShields,element.CrippledAttack,
           element.CrippledEnergy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role)
           game_data.ship_list.push(ship_to_push);
@@ -433,7 +474,7 @@ function add_large_ship_data()
       else if(element.LargeShipType == "largeOneCard")
       {
         console.log("pushing two");
-        let ship_to_push = new ship_page.Large_Ship_One_Card(element.LargeShipType,element.Name,0,0,element.ForeShields, 
+        let ship_to_push = new ship_page.Large_Ship_One_Card(element.ID,element.LargeShipType,element.Name,0,0,element.ForeShields, 
           element.ForeHull, maneuvers_for_this_ship, element.Energy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role);
         game_data.ship_list.push(ship_to_push);
         game_data.all_pilots.push(new pilot_page.pilot(element.Name+" Pilot", element.Faction,element.PilotSkill, element.Cost, element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false,element.ID));

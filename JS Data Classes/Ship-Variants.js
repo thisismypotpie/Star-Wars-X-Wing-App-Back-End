@@ -6,9 +6,10 @@ const ship_types = {
 }
 
 class ship{
-    constructor(ship_type, ship_name, attack, agility, shields, hull, maneuvers, card,role)
+    constructor(id,ship_type, ship_name, attack, agility, shields, hull, maneuvers, card,role)
     {
         //constant ship info
+        this.id = id;
         this.ship_type = ship_type;
         this.ship_name = ship_name;
         this.attack = attack;
@@ -24,9 +25,9 @@ class ship{
 module.exports.ship = ship;
 
 class Large_Ship_One_Card extends ship{
-    constructor(ship_type, ship_name, attack, agility, shields, hull, maneuvers, energy,crit_hit_cards_fore, crit_hit_cards_aft, card,role)
+    constructor(id,ship_type, ship_name, attack, agility, shields, hull, maneuvers, energy,crit_hit_cards_fore, crit_hit_cards_aft, card,role)
     {
-        super(ship_type, ship_name, attack, agility, shields, hull, maneuvers, card,role);
+        super(id,ship_type, ship_name, attack, agility, shields, hull, maneuvers, card,role);
         this.energy = energy;
         this.crit_hit_cards_fore = crit_hit_cards_fore;
         this.crit_hit_cards_aft = crit_hit_cards_aft;
@@ -36,10 +37,10 @@ class Large_Ship_One_Card extends ship{
 module.exports.Large_Ship_One_Card = Large_Ship_One_Card;
 
 class Large_Ship_Two_Cards extends Large_Ship_One_Card{
-    constructor(ship_type, ship_name, attack, agility, shields, hull, maneuvers, 
+    constructor(id,ship_type, ship_name, attack, agility, shields, hull, maneuvers, 
         energy, aft_agility, aft_hull, aft_shields, crippled_attack, crippled_energy,crit_hit_cards_fore, crit_hit_cards_aft, card,role)
     {
-        super(ship_type, ship_name, attack, agility, shields, hull, maneuvers,energy,crit_hit_cards_fore,crit_hit_cards_aft,card,role);
+        super(id,ship_type, ship_name, attack, agility, shields, hull, maneuvers,energy,crit_hit_cards_fore,crit_hit_cards_aft,card,role);
         //this.energy = energy;
         this.aft_agility = aft_agility;
         this.aft_hull = aft_hull;
