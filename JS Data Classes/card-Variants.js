@@ -35,6 +35,7 @@ class UpgradeCard{
         this.scum_only = scum_only;
         this.image_path = image_path;
         this.id = id;
+        this.ordnance_tokens = 0;
     }
 }
 module.exports.UpgradeCard = UpgradeCard;
