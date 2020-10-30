@@ -554,6 +554,7 @@ function insert_reminders_in_db(reminders,game_name)
   // 
   if(reminders == null)//If there are no reminders, then this will be null.
   {
+    console.log("There were no reminders.");
     return;
   }
   reminders.forEach(reminder=>{
@@ -586,8 +587,9 @@ function insert_reminders_in_db(reminders,game_name)
   {
     between_rounds =  1;
   }
-    db.run("INSER INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,ships_turn_maneuver_select,ships_turn_movement_phase,ships_turn_attack_phase,ship_targeted,between_maneuver_and_movement,between_movement_and_attack,between_rounds);
+    db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,ships_turn_maneuver_select,ships_turn_movement_phase,ships_turn_attack_phase,ship_targeted,between_maneuver_and_movement,between_movement_and_attack,between_rounds);
   })
+  console.log("reminders loaded into db.")
 }
 
 function insert_save_game_info(game_name)
