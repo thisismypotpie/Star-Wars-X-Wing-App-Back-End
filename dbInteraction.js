@@ -544,12 +544,49 @@ function insert_turn_info(game_name,save_game_phase)
 
 function insert_reminders_in_db(reminders,game_name)
 {
+  var ships_turn_maneuver_select = 0;
+  var ships_turn_movement_phase = 0;
+  var ships_turn_attack_phase = 0;
+  var ship_targeted = 0;
+  var between_maneuver_and_movement = 0;
+  var between_movement_and_attack = 0;
+  var between_rounds = 0;
+  // 
   if(reminders == null)//If there are no reminders, then this will be null.
   {
     return;
   }
   reminders.forEach(reminder=>{
-    db.run("INSER INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",)
+      //Convert each true or false into 0 or 1.
+  if(reminder.when_ships_turn_maneuver_selection == true)
+  {
+    ships_turn_maneuver_select = 1;
+  }
+  if(reminder.when_ships_turn_movement_phase  ==true)
+  {
+    ships_turn_movement_phase = 1;
+  }
+  if(reminder.when_ships_turn_attack_phase  ==true)
+  {
+    ships_turn_attack_phase = 1;
+  }
+  if(reminder.when_targeted  ==true)
+  {
+    ship_targeted = 1;
+  }
+  if(reminder.between_select_and_movement_phase  ==true)
+  {
+    between_maneuver_and_movement = 1;
+  }
+  if(reminder.between_movement_and_attack_phase  ==true)
+  {
+    between_movement_and_attack = 1;
+  }
+  if(reminder.between_rounds  ==true)
+  {
+    between_rounds =  1;
+  }
+    db.run("INSER INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,ships_turn_maneuver_select,ships_turn_movement_phase,ships_turn_attack_phase,ship_targeted,between_maneuver_and_movement,between_movement_and_attack,between_rounds);
   })
 }
 
