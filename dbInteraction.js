@@ -500,6 +500,7 @@ async function save_game(body)
   var game_name = body[body.length-1].save_game_name;
   var save_game_phase = body[body.length-1].save_game_phase;
   var target_locks = body[body.length-1].target_locks;
+  var reminders = body[body.length-1].reminders;
   body.pop();//Get rid of save name and phase
 
   insert_save_game_info(game_name);
@@ -507,6 +508,7 @@ async function save_game(body)
   insert_teams_into_table(body, game_name);
   insert_ships_in_db(body,game_name);
   insert_upgrades_in_db(body,game_name);
+  insert_reminders_in_db(reminders,game_name)
   if(target_locks !=null && target_locks != undefined)
   {
     if(target_locks.length>0)
@@ -538,6 +540,17 @@ function insert_turn_info(game_name,save_game_phase)
     db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
   }
    console.log(save_game_phase);
+}
+
+function insert_reminders_in_db(reminders,game_name)
+{
+  if(reminders == null)//If there are no reminders, then this will be null.
+  {
+    return;
+  }
+  reminders.forEach(reminder=>{
+    db.run("INSER INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",)
+  })
 }
 
 function insert_save_game_info(game_name)
@@ -676,6 +689,7 @@ function delete_old_data(body)
   db.run("DELETE FROM TurnInfo WHERE SaveGameName = '"+game_name+"'");
   db.run("DELETE FROM TargetLockList WHERE SaveGameName = '"+game_name+"'");
   db.run("DELETE FROM upgradeList WHERE GameName = '"+game_name+"'");
+  db.run("DELETE FROM SavedReminders WHERE GameName ='"+game_name+"'")
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
