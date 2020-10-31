@@ -36,7 +36,8 @@ var loading_raw_data={
   ship_data: [],
   turn_data: undefined,
   target_lock_data:[],
-  upgrade_data:[]
+  upgrade_data:[],
+  reminders:[] 
 }
 
 /**
@@ -93,6 +94,7 @@ const server = http.createServer(function(request, response){
     loading_raw_data.target_lock_data = [];
     loading_raw_data.upgrade_data = [];
     loading_raw_data.turn_data = undefined;
+    loading_raw_data.reminders = [];
     request.on('data', chunk => {
     body += chunk.toString();});
     request.on('end', () => {
@@ -544,7 +546,17 @@ function insert_turn_info(game_name,save_game_phase)
 
 function insert_reminders_in_db(reminders,game_name)
 {
-  var ships_turn_maneuver_select = 0;
+  if(reminders == null || reminders.length <= 0)//If there are no reminders, then this will be null.
+  {
+    console.log("There were no reminders.");
+    return;
+  }
+  reminders.forEach(reminder=>{
+    console.log(reminder);
+    db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,(reminder.when_ships_turn_maneuver_selection ? 1:0),(reminder.when_ships_turn_movement_phase ? 1:0),(reminder.when_ships_turn_attack_phase ? 1:0),(reminder.when_targeted  ? 1:0),(reminder.between_select_and_movement_phase ? 1:0),(reminder.between_movement_and_attack_phase ? 1:0),(reminder.between_rounds ? 1:0));
+
+  })
+  /*var ships_turn_maneuver_select = 0;
   var ships_turn_movement_phase = 0;
   var ships_turn_attack_phase = 0;
   var ship_targeted = 0;
@@ -588,7 +600,15 @@ function insert_reminders_in_db(reminders,game_name)
     between_rounds =  1;
   }
     db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,ships_turn_maneuver_select,ships_turn_movement_phase,ships_turn_attack_phase,ship_targeted,between_maneuver_and_movement,between_movement_and_attack,between_rounds);
-  })
+    //reset variables.
+    ships_turn_maneuver_select = 0;
+    ships_turn_movement_phase = 0;
+    ships_turn_attack_phase = 0;
+    ship_targeted = 0;
+    between_maneuver_and_movement = 0;
+    between_movement_and_attack = 0;
+    between_rounds = 0;
+  })*/
   console.log("reminders loaded into db.")
 }
 
@@ -765,6 +785,11 @@ function load_game(body)
         query("SELECT * FROM upgradeList WHERE GameName = ?",game_name).then(upgrades=>{
         upgrades.forEach(element=>{
         loading_raw_data.upgrade_data.push(element);
-        })
-        })
+    })
+})
+        query("SELECT * FROM SavedReminders WHERE GameName = ?",game_name).then(reminders=>{
+        reminders.forEach(element=>{
+        loading_raw_data.reminders.push(element);
+    })
+})
 }
