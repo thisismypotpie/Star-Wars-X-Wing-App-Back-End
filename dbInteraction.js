@@ -648,7 +648,7 @@ function insert_upgrades_in_db(body,game_name)
            var current_upgrade = body[i].ship_list[j].upgrades[k];
            var team_name = body[i].team_name;
            var roster_number = body[i].ship_list[j].roster_number;
-           db.run("INSERT INTO upgradeList(GameName,UpgradeID,TeamName,RosterNumber,OrdnanceTokens,Orientation)VALUES(?,?,?,?,?,?)",game_name,current_upgrade.upgrade.id,team_name,roster_number,current_upgrade.ordnance_tokens,current_upgrade.orientation);
+           db.run("INSERT INTO upgradeList(GameName,UpgradeID,TeamName,RosterNumber,OrdnanceTokens,AllocatedEnergy,Orientation)VALUES(?,?,?,?,?,?,?)",game_name,current_upgrade.upgrade.id,team_name,roster_number,current_upgrade.ordnance_tokens,current_upgrade.energy_allocated,current_upgrade.orientation);
         }
     }
   }
