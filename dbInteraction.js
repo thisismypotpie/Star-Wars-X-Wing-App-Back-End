@@ -184,7 +184,7 @@ function get_planet_data()
   var tables = query("SELECT * FROM Planets").then( tables=>{
     var all_planets = [];
     tables.forEach(element => {
-      all_planets.push({name: element.Name, id: element.ID, image_path:element.ImagePath, x_coordinate: element.X_Coordinate, y_coordinate: element.Y_Coordinate, sector: element.Sector});
+      all_planets.push({name: element.Name, id: element.ID, image_path:element.ImagePath, x_coordinate: element.X_Coordinate, y_coordinate: element.Y_Coordinate, sector: element.Sector, priority: element.Priority});
     })
     console.log("PLANETS LOADED. LENGTH: "+all_planets.length);
     game_data.all_planets = all_planets;
