@@ -478,7 +478,16 @@ function add_large_ship_data()
       else if(element.LargeShipType == "largeOneCard")
       {
         console.log("pushing two");
-        let ship_to_push = new ship_page.Large_Ship_One_Card(element.ID,element.LargeShipType,element.Name,0,0,element.ForeShields, 
+        var ship_attack;
+        if(element.Attack == null)
+        {
+          ship_attack = 0;
+        }
+        else
+        {
+          ship_attack = element.Attack;
+        }
+        let ship_to_push = new ship_page.Large_Ship_One_Card(element.ID,element.LargeShipType,element.Name,ship_attack,0,element.ForeShields, 
           element.ForeHull, maneuvers_for_this_ship, element.Energy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role);
         game_data.ship_list.push(ship_to_push);
         game_data.all_pilots.push(new pilot_page.pilot(element.Name+" Pilot", element.Faction,element.PilotSkill, element.Cost, element.UpgradeTypes.split('*'), ship_to_push,element.ForeImage,false,element.ID));
