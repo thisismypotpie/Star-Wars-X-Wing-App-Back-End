@@ -7,6 +7,7 @@ const ship_page = require('./JS Data Classes/Ship-Variants.js');
 const maneuver_page = require('./JS Data Classes/Maneuvers.js');
 const pilot_page = require('./JS Data Classes/Pilot-Variants');
 const card_page = require('./JS Data Classes/card-Variants');
+//const gc_classes = require('./JS Data Classes/GC-Data-Variants');
 const http = require('http');
 const { parse } = require('path');
 const { Console } = require('console');
@@ -83,7 +84,25 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       save_game(body); 
     })
-    setTimeout(()=>{response.end('ok')},10000); 
+    setTimeout(()=>{response.end('ok')},1000); 
+  }
+  else if(request.url == "/save_game_gc")//Save galactic conquest game.
+  {
+    establish_database_connection("saved_games_gc");
+    //Add combat indicator to body to determine if we need to save a game in combat.
+    let body = '';
+    request.on('data', chunk => {
+    body += chunk.toString();});
+    request.on('end', () => {
+      body = JSON.parse(body);
+      save_game_gc(body);
+      if(1==2)
+      {
+        establish_database_connection("saved_games");
+        //There is a combat phase we need to save.
+      }
+    })
+    setTimeout(()=>{response.end('ok')},1000); 
   }
   else if(request.url == "/load_game")//Load a game.
   {
@@ -114,13 +133,18 @@ const server = http.createServer(function(request, response){
       overwrite_game(body);
       //delete_old_data(body);
     })
-    setTimeout(()=>{response.end('ok')},10000);
+    setTimeout(()=>{response.end('ok')},1000);
   }
   else if(request.url == "/get_game_names")//get all names of currently saved games.
   {
     establish_database_connection("saved_games");
     var game_names = get_game_names();
-    setTimeout(()=>{response.end(JSON.stringify(game_names))},3000);
+    setTimeout(()=>{
+      establish_database_connection("saved_games_gc");
+      var gc_game_names = get_game_names();
+      setTimeout(()=>{game_names = game_names.concat(gc_game_names)},333)
+    },333);
+    setTimeout(()=>{console.log("Leaving back-end for get game names.");response.end(JSON.stringify(game_names))},2000);
   }
   else
   {
@@ -366,6 +390,7 @@ function get_game_names()
   var tables = query("SELECT * FROM GameIdentifiers")
   .then(tables=>{
     tables.forEach(element=>{
+      console.log("Found game called: "+element.GameName);
       names.push(element.GameName);
     })
   });
@@ -398,7 +423,7 @@ if(dbExists)
         return;  
     }
  });
- console.log("Connection Established");
+ console.log("Connection established with main game data db.");
 }
 }
 else if(db_connection_name == "saved_games")
@@ -414,7 +439,23 @@ if(dbExists)
         return;  
     }
  });
- console.log("Connection Established");
+ console.log("Connection established with saved games db.");
+}
+}
+else if(db_connection_name == "saved_games_gc")
+{
+  var dbExists = fs.existsSync('./GameDB.db');
+if(dbExists)
+{
+//open the database connection
+  db = new sqlite3.Database('./GalactiConquestSavedGamesDB.db', sqlite3,(err)=>{
+    if(err != null)
+    {
+        console.log(err);    
+        return;  
+    }
+ });
+ console.log("Connection established with galactic conquest saves db.");
 }
 }
 }
@@ -502,8 +543,11 @@ function add_large_ship_data()
 }
 
 
+////CODE FOR SAVing/OVERWRITING GAMES FOR GALACTIC CONQUEST///////////////////////////////////////////
+async function save_game_gc(body)
+{
 
-
+}
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
 async function save_game(body)
@@ -565,59 +609,6 @@ function insert_reminders_in_db(reminders,game_name)
     db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,(reminder.when_ships_turn_maneuver_selection ? 1:0),(reminder.when_ships_turn_movement_phase ? 1:0),(reminder.when_ships_turn_attack_phase ? 1:0),(reminder.when_targeted  ? 1:0),(reminder.between_select_and_movement_phase ? 1:0),(reminder.between_movement_and_attack_phase ? 1:0),(reminder.between_rounds ? 1:0));
 
   })
-  /*var ships_turn_maneuver_select = 0;
-  var ships_turn_movement_phase = 0;
-  var ships_turn_attack_phase = 0;
-  var ship_targeted = 0;
-  var between_maneuver_and_movement = 0;
-  var between_movement_and_attack = 0;
-  var between_rounds = 0;
-  // 
-  if(reminders == null)//If there are no reminders, then this will be null.
-  {
-    console.log("There were no reminders.");
-    return;
-  }
-  reminders.forEach(reminder=>{
-      //Convert each true or false into 0 or 1.
-  if(reminder.when_ships_turn_maneuver_selection == true)
-  {
-    ships_turn_maneuver_select = 1;
-  }
-  if(reminder.when_ships_turn_movement_phase  ==true)
-  {
-    ships_turn_movement_phase = 1;
-  }
-  if(reminder.when_ships_turn_attack_phase  ==true)
-  {
-    ships_turn_attack_phase = 1;
-  }
-  if(reminder.when_targeted  ==true)
-  {
-    ship_targeted = 1;
-  }
-  if(reminder.between_select_and_movement_phase  ==true)
-  {
-    between_maneuver_and_movement = 1;
-  }
-  if(reminder.between_movement_and_attack_phase  ==true)
-  {
-    between_movement_and_attack = 1;
-  }
-  if(reminder.between_rounds  ==true)
-  {
-    between_rounds =  1;
-  }
-    db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,ships_turn_maneuver_select,ships_turn_movement_phase,ships_turn_attack_phase,ship_targeted,between_maneuver_and_movement,between_movement_and_attack,between_rounds);
-    //reset variables.
-    ships_turn_maneuver_select = 0;
-    ships_turn_movement_phase = 0;
-    ships_turn_attack_phase = 0;
-    ship_targeted = 0;
-    between_maneuver_and_movement = 0;
-    between_movement_and_attack = 0;
-    between_rounds = 0;
-  })*/
   console.log("reminders loaded into db.")
 }
 
@@ -745,7 +736,10 @@ function overwrite_game(body)
   delete_old_data(body);
   setTimeout(()=>{save_game(body)},1000);
 }
+function overwrite_game_gc(body)
+{
 
+}
 
 ////////////FUNCTIONS FOR DELETEING OLD DATA/////////////////////////////////////////////////////////////////////////
 function delete_old_data(body)
@@ -767,6 +761,11 @@ var loading_raw_data={
   ship_data: []
 }
 */
+function load_game_gc(body)
+{
+
+}
+
 function load_game(body)
 {
     var game_name = body;
