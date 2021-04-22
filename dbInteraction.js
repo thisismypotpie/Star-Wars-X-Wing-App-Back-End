@@ -546,7 +546,50 @@ function add_large_ship_data()
 ////CODE FOR SAVing/OVERWRITING GAMES FOR GALACTIC CONQUEST///////////////////////////////////////////
 async function save_game_gc(body)
 {
+  console.log("Saving Galactic Conquest...")
+  console.log(body);
+  insert_gc_setup_data(body.game_name,body.setup_data);
+  insert_faction_data(body.game_name, body.faction_data);
+  insert_game_data(body.game_name,body.phase,body.whos_turn,body.first_or_second_half_of_round);
 
+  if(body.setup_data.pirate_faction == "on")
+  {
+    insert_pirate_data(body.game_name,body.setup_data.pirate_options)
+  }
+}
+
+function insert_gc_setup_data(game_name,setup_data)
+{
+
+}
+
+function insert_pirate_data(game_name,pirate_options)
+{
+  db.run("INSERT INTO PirateOptions()")
+}
+
+function insert_faction_data(game_name,faction_data)
+{
+  faction_data.forEach(faction=>{
+    db.run("INSERT INTO SavedFactions(GameName,Faction,Currency,Fuel,Durasteel,Parts,Electronics,Tibanna,HighestSquadNumber,HighestFleetNumber,HighestArmadaNumber)VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,faction.faction,faction.currency,faction.fuel,faction.durasteel,faction.parts,faction.electronics,faction.tibanna,faction.highest_squad_number,faction.highest_fleet_number,faction.highest_armada_number)
+    faction_data.list_of_the_fallen.forEach(fallen=>{
+      db.run("INSERT INTO SavedListOfTheDead(GameName,Faction,Name) VALUES(?,?,?)",game_name,faction.faction,fallen);
+    })
+    faction_data.navy.forEach(ship_group =>{
+      var has_moved = 0;
+      if(ship_group.has_moved == true)
+      {
+        has_moved = 1
+      }
+      db.run("INSERT INTO SavedNavies(GameName,GroupName,GroupFaction,GroupLocation,HasMoved) VALUES(?,?,?,?,?)",game_name,ship_group.group_name,ship_group.faction,ship_group.location,has_moved);
+    })
+  })
+}
+
+function insert_game_data(game_name,phase,whos_turn,turn_half)
+{
+  db.run("INSERT INTO GameIdentifiers(GameName) VALUES(?)",game_name);
+  db.run("INSERT INTO GameData(GameName,Phase,WhosTrun,PlacementRoundHalf) VALUES(?,?,?,?)",game_name,phase,whos_turn,turn_half);
 }
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
