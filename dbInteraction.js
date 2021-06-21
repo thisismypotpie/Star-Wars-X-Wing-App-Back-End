@@ -104,6 +104,25 @@ const server = http.createServer(function(request, response){
     })
     setTimeout(()=>{response.end('ok')},1000); 
   }
+  else if(request.url == "/overwrite_game_gc")//overwrite a gc.
+  {
+    establish_database_connection("saved_games_gc");
+    //Add combat indicator to body to determine if we need to save a game in combat.
+    let body = '';
+    request.on('data', chunk => {
+    body += chunk.toString();});
+    request.on('end', () => {
+      body = JSON.parse(body);
+      //save_game_gc(body);
+      overwrite_game_gc(body)
+      if(1==2)
+      {
+        establish_database_connection("saved_games");
+        //There is a combat phase we need to save.
+      }
+    })
+    setTimeout(()=>{response.end('ok')},1000); 
+  }
   else if(request.url == "/load_game")//Load a game.
   {
     establish_database_connection("saved_games");
@@ -543,39 +562,75 @@ function add_large_ship_data()
 }
 
 
-////CODE FOR SAVing/OVERWRITING GAMES FOR GALACTIC CONQUEST///////////////////////////////////////////
+////CODE FOR Saving/OVERWRITING GAMES FOR GALACTIC CONQUEST///////////////////////////////////////////
 async function save_game_gc(body)
 {
   console.log("Saving Galactic Conquest...")
   console.log(body);
-  insert_gc_setup_data(body.game_name,body.setup_data);
-  insert_faction_data(body.game_name, body.faction_data);
-  insert_game_data(body.game_name,body.phase,body.whos_turn,body.first_or_second_half_of_round);
+  insert_gc_setup_data_gc(body.game_name,body.setup_data);
+  insert_faction_data_gc(body.game_name, body.faction_data);
+  insert_game_data_gc(body.game_name,body.phase,body.whos_turn,body.first_or_second_half_of_round);
 
   if(body.setup_data.pirate_faction == "on")
   {
-    insert_pirate_data(body.game_name,body.setup_data.pirate_options)
+    insert_pirate_data_gc(body.game_name,body.setup_data.pirate_options)
+  }
+  if(1==2)//save if there is a combat
+  {
+
+  }
+  else//save if there is not combat.
+  {
+  //Insert each navy into the regular saved games db.
+  setTimeout(()=>{
+    establish_database_connection("saved_games");
+    insert_save_game_info(body.game_name);
+    var all_ships = [];
+    //Convert the gc body to a body the the regular save game db can understand.
+    body.faction_data.forEach(faction=>{
+      faction.navy.forEach(ship_group=>{
+        all_ships.push({
+          team_name: ship_group.group_name,
+          has_initiative_token: false,
+          ship_list: ship_group.team.ship_list
+        })
+      })
+    })
+    insert_ships_in_db(all_ships,body.game_name);
+    insert_upgrades_in_db(all_ships,body.game_name);
+  },1000);
   }
 }
 
-function insert_gc_setup_data(game_name,setup_data)
+function insert_gc_setup_data_gc(game_name,setup_data)
 {
-
+  db.run("INSERT INTO SavedSetUpData(GameName,FactionChosen,ResourcesChosen,PlanetCount,PirateFaction,PlanetAssignment,Location)VALUES(?,?,?,?,?,?,?)",game_name,setup_data.faction_chosen,setup_data.resources_chosen,setup_data.active_planets.length,setup_data.pirate_faction,setup_data.planet_assignment,setup_data.location);
+  setup_data.active_planets.forEach(planet=>{
+      db.run("INSERT INTO SavedPlanetData(GameName,PlanetID,ControllingFaction,ResourceName,ResourceImagePath,ResourceQuantity,ResourceSpawnChance) VALUES(?,?,?,?,?,?,?)",game_name,planet.planet.id,planet.controlling_faction,planet.resource.name,planet.resource.image_path,planet.resource.quantity,planet.resource.spawn_chance);
+  })
 }
 
-function insert_pirate_data(game_name,pirate_options)
+function insert_pirate_data_gc(game_name,pirate_options)
 {
-  db.run("INSERT INTO PirateOptions()")
+  db.run("INSERT INTO PirateShipData(GameName,HWK290,KihraxzFighter,M3AInterceptor,M12LKimongilaFighter,G1AStarfighter,ProtectorateStarfighter,Quadjumper,ScurrgH6Bomber,StarViper,YWing,Z95Headhunter,Firespray31,HoundsTooth,Aggressor,JumpMaster5000,LancerClassPrusuitCraft,YT1300,CROCCruiser)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,pirate_options.HWK_290,pirate_options.Kihraxz_Fighter,pirate_options.M3_A_Interceptor,pirate_options.M12_L_Kimongila_Fighter,pirate_options.G_1A_Starfighter,pirate_options.Protectorate_Starfighter,pirate_options.Quadjumper,pirate_options.Scurrg_H_6_Bomber,pirate_options.StarVipet,pirate_options.Y_Wing,pirate_options.Z_95_Headhunter,pirate_options.Firespray_31,pirate_options.Hounds_Tooth,pirate_options.Aggressor,pirate_options.Jump_Master_5000,pirate_options.Lancer_Craft_pusuit_Craft,pirate_options.YT_1300,pirate_options.C_ROC_Cruiser)
+  for(var i=0; i < pirate_options.list_of_the_dead.length;i++)
+  {
+    db.run("INSERT INTO SavedListOfTheDead(GameName,Faction,Name)VALUES(?,?,?)",game_name,"Scum",pirate_options.list_of_the_dead[i]);
+  }
+  for(var i=0;i < pirate_options.roster_numbers.length;i++)
+  {
+    db.run("INSERT INTO PirateRosterNumbers(GameName,Roster)VALUES(?,?)",game_name,pirate_options.roster_numbers[i]);
+  }
 }
 
-function insert_faction_data(game_name,faction_data)
+function insert_faction_data_gc(game_name,faction_data)
 {
   faction_data.forEach(faction=>{
     db.run("INSERT INTO SavedFactions(GameName,Faction,Currency,Fuel,Durasteel,Parts,Electronics,Tibanna,HighestSquadNumber,HighestFleetNumber,HighestArmadaNumber)VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,faction.faction,faction.currency,faction.fuel,faction.durasteel,faction.parts,faction.electronics,faction.tibanna,faction.highest_squad_number,faction.highest_fleet_number,faction.highest_armada_number)
-    faction_data.list_of_the_fallen.forEach(fallen=>{
+    faction.list_of_the_fallen.forEach(fallen=>{
       db.run("INSERT INTO SavedListOfTheDead(GameName,Faction,Name) VALUES(?,?,?)",game_name,faction.faction,fallen);
     })
-    faction_data.navy.forEach(ship_group =>{
+    faction.navy.forEach(ship_group =>{
       var has_moved = 0;
       if(ship_group.has_moved == true)
       {
@@ -586,10 +641,34 @@ function insert_faction_data(game_name,faction_data)
   })
 }
 
-function insert_game_data(game_name,phase,whos_turn,turn_half)
+function insert_game_data_gc(game_name,phase,whos_turn,turn_half)
 {
   db.run("INSERT INTO GameIdentifiers(GameName) VALUES(?)",game_name);
-  db.run("INSERT INTO GameData(GameName,Phase,WhosTrun,PlacementRoundHalf) VALUES(?,?,?,?)",game_name,phase,whos_turn,turn_half);
+  db.run("INSERT INTO GameData(GameName,Phase,WhosTurn,PlacementRoundHalf) VALUES(?,?,?,?)",game_name,phase,whos_turn,turn_half);
+}
+
+function overwrite_game_gc(game_name,body)
+{
+  delete_old_data_gc(game_name);
+  //delete_old_data(body);
+  if(1==2)//if saving a combat phase.
+  {
+    setTimeout(()=>{save_game(body)},1000);
+  }
+  setTimeout(()=>{save_game_gc(body)},1000);
+}
+
+function delete_old_data_gc(game_name)
+{
+  db.run("DELETE FROM GameData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM GameIdentifiers WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM PirateRosterNumbers WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM PirateShipData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedFactions WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedListOfTheDead WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedNavies WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedPlanetData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'")
 }
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
@@ -600,6 +679,8 @@ async function save_game(body)
   var target_locks = body[body.length-1].target_locks;
   var reminders = body[body.length-1].reminders;
   body.pop();//Get rid of save name and phase
+
+  console.log(body);
 
   insert_save_game_info(game_name);
   insert_turn_info(game_name,save_game_phase);
