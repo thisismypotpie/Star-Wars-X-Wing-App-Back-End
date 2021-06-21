@@ -150,7 +150,6 @@ const server = http.createServer(function(request, response){
     request.on('end', () => {
       body = JSON.parse(body);
       overwrite_game(body);
-      //delete_old_data(body);
     })
     setTimeout(()=>{response.end('ok')},1000);
   }
@@ -650,11 +649,11 @@ function insert_game_data_gc(game_name,phase,whos_turn,turn_half)
 function overwrite_game_gc(game_name,body)
 {
   delete_old_data_gc(game_name);
-  //delete_old_data(body);
-  if(1==2)//if saving a combat phase.
-  {
-    setTimeout(()=>{save_game(body)},1000);
-  }
+  setTimeout(()=>{
+    establish_database_connection("saved_games");
+    delete_old_data(game_name);
+    setTimeout(establish_database_connection("saved_games_gc"),250)
+  },250)
   setTimeout(()=>{save_game_gc(body)},1000);
 }
 
@@ -668,7 +667,7 @@ function delete_old_data_gc(game_name)
   db.run("DELETE FROM SavedListOfTheDead WHERE GameName ='"+game_name+"'")
   db.run("DELETE FROM SavedNavies WHERE GameName ='"+game_name+"'")
   db.run("DELETE FROM SavedPlanetData WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'");
 }
 
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
@@ -857,7 +856,7 @@ function insert_ships_in_db(body,game_name)
 
 function overwrite_game(body)
 {
-  delete_old_data(body);
+  delete_old_data(body[body.length-1].save_game_name);
   setTimeout(()=>{save_game(body)},1000);
 }
 function overwrite_game_gc(body)
@@ -866,9 +865,8 @@ function overwrite_game_gc(body)
 }
 
 ////////////FUNCTIONS FOR DELETEING OLD DATA/////////////////////////////////////////////////////////////////////////
-function delete_old_data(body)
+function delete_old_data(game_name)
 {
-  var game_name = body[body.length-1].save_game_name;
   db.run("DELETE FROM GameIdentifiers WHERE GameName = '"+game_name+"'");
   db.run("DELETE FROM SavedTeamsTable WHERE SavedGameName = '"+game_name+"'");
   db.run("DELETE FROM SavedShips WHERE SaveGameName = '"+game_name+"'");
