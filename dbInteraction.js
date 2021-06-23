@@ -115,11 +115,6 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       //save_game_gc(body);
       overwrite_game_gc(body)
-      if(1==2)
-      {
-        establish_database_connection("saved_games");
-        //There is a combat phase we need to save.
-      }
     })
     setTimeout(()=>{response.end('ok')},1000); 
   }
@@ -156,11 +151,14 @@ const server = http.createServer(function(request, response){
   else if(request.url == "/get_game_names")//get all names of currently saved games.
   {
     establish_database_connection("saved_games");
-    var game_names = get_game_names();
+    var game_names = {
+      reg_game_names: [],
+      gc_game_names: []
+    }
+    game_names.reg_game_names = get_game_names();
     setTimeout(()=>{
       establish_database_connection("saved_games_gc");
-      var gc_game_names = get_game_names();
-      setTimeout(()=>{game_names = game_names.concat(gc_game_names)},333)
+      game_names.gc_game_names = get_game_names();
     },333);
     setTimeout(()=>{console.log("Leaving back-end for get game names.");response.end(JSON.stringify(game_names))},2000);
   }
@@ -646,30 +644,6 @@ function insert_game_data_gc(game_name,phase,whos_turn,turn_half)
   db.run("INSERT INTO GameData(GameName,Phase,WhosTurn,PlacementRoundHalf) VALUES(?,?,?,?)",game_name,phase,whos_turn,turn_half);
 }
 
-function overwrite_game_gc(game_name,body)
-{
-  delete_old_data_gc(game_name);
-  setTimeout(()=>{
-    establish_database_connection("saved_games");
-    delete_old_data(game_name);
-    setTimeout(establish_database_connection("saved_games_gc"),250)
-  },250)
-  setTimeout(()=>{save_game_gc(body)},1000);
-}
-
-function delete_old_data_gc(game_name)
-{
-  db.run("DELETE FROM GameData WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM GameIdentifiers WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM PirateRosterNumbers WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM PirateShipData WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedFactions WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedListOfTheDead WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedNavies WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedPlanetData WHERE GameName ='"+game_name+"'")
-  db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'");
-}
-
 ////CODE FOR SAVING/OVERWRITING GAMES////////////////////////////////////////////////////////////////
 async function save_game(body)
 {
@@ -859,9 +833,17 @@ function overwrite_game(body)
   delete_old_data(body[body.length-1].save_game_name);
   setTimeout(()=>{save_game(body)},1000);
 }
+
 function overwrite_game_gc(body)
 {
-
+  console.log("BOBBY: "+body)
+  delete_old_data_gc(body.game_name);
+  setTimeout(()=>{
+    establish_database_connection("saved_games");
+    delete_old_data(body.game_name);
+    setTimeout(()=>{establish_database_connection("saved_games_gc"),500})
+  },250)
+  setTimeout(()=>{save_game_gc(body)},1000);
 }
 
 ////////////FUNCTIONS FOR DELETEING OLD DATA/////////////////////////////////////////////////////////////////////////
@@ -874,15 +856,24 @@ function delete_old_data(game_name)
   db.run("DELETE FROM TargetLockList WHERE SaveGameName = '"+game_name+"'");
   db.run("DELETE FROM upgradeList WHERE GameName = '"+game_name+"'");
   db.run("DELETE FROM SavedReminders WHERE GameName ='"+game_name+"'")
+  console.log("Old data from save db has been deleted.")
+}
+
+function delete_old_data_gc(game_name)
+{
+  db.run("DELETE FROM GameData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM GameIdentifiers WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM PirateRosterNumbers WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM PirateShipData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedFactions WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedListOfTheDead WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedNavies WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedPlanetData WHERE GameName ='"+game_name+"'")
+  db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'");
+  console.log("Old data from gc save db has been deleted.")
+
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-var loading_raw_data={
-  game_phase: "",
-  team_data: [],
-  ship_data: []
-}
-*/
 function load_game_gc(body)
 {
 
