@@ -122,12 +122,6 @@ const server = http.createServer(function(request, response){
   {
     establish_database_connection("saved_games");
     let body = '';
-    loading_raw_data.team_data = [];
-    loading_raw_data.ship_data = [];
-    loading_raw_data.target_lock_data = [];
-    loading_raw_data.upgrade_data = [];
-    loading_raw_data.turn_data = undefined;
-    loading_raw_data.reminders = [];
     request.on('data', chunk => {
     body += chunk.toString();});
     request.on('end', () => {
@@ -691,7 +685,7 @@ function insert_turn_info(game_name,save_game_phase)
   {
     db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
   }
-   console.log(save_game_phase);
+   console.log("Phase: "+save_game_phase);
 }
 
 function insert_reminders_in_db(reminders,game_name)
