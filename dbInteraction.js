@@ -65,13 +65,6 @@ const server = http.createServer(function(request, response){
     get_maneuver_data();
     get_planet_data();
     get_map_paths();
-    //I needed to use chain function calling here because I was not able to achieve the load order that I wanted in any other way. 
-    //Therefore, each function will call the next one within its promise to ensure the load order of the database while the response
-    //must wait three seconds before returning to ensure that the game_data object is fully created before returning.
-    /*get_ship_data();
-    get_pilot_data();
-    add_large_ship_data();
-    close_database_connection();*/
     setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
   }
   else if(request.url == "/save_game")//Save a game.
@@ -128,7 +121,7 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       load_game(body);
     })
-    setTimeout(()=>{response.end(JSON.stringify(loading_raw_data))},3000);
+    setTimeout(()=>{console.log(loading_raw_data);response.end(JSON.stringify(loading_raw_data))},1000);
   }
   else if(request.url == "/overwrite_game")//overwite a game.
   {
@@ -878,33 +871,39 @@ function load_game(body)
     var game_name = body;
     console.log("game name is: "+game_name);
         query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = ? ORDER BY TurnOrder Asc",game_name).then( team_names=>{
-        team_names.forEach(element=>{
+        loading_raw_data.team_data = team_names;
+        /*team_names.forEach(element=>{
         loading_raw_data.team_data.push(element);
-        })
+        })*/
     })
         query("SELECT * FROM SavedShips WHERE SaveGameName = ? ORDER BY TurnOrder Asc",game_name).then(ships=>{
-        ships.forEach(element=>{
+        loading_raw_data.ship_data = ships;
+        /*ships.forEach(element=>{
         loading_raw_data.ship_data.push(element);
-        })
+        })*/
     })
         query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
-      info.forEach(element=>{
+        loading_raw_data.turn_data = info;
+          /*info.forEach(element=>{
       loading_raw_data.turn_data = element;
-      })
+      })*/
   })
         query("SELECT * FROM TargetLockList WHERE SaveGameName = ?",game_name).then(locks=>{
-        locks.forEach(element=>{
+        loading_raw_data.target_lock_data = locks;
+        /*locks.forEach(element=>{
         loading_raw_data.target_lock_data.push(element);
-    })
+    })*/
 })
         query("SELECT * FROM upgradeList WHERE GameName = ?",game_name).then(upgrades=>{
-        upgrades.forEach(element=>{
+        loading_raw_data.upgrade_data = upgrades;
+        /*upgrades.forEach(element=>{
         loading_raw_data.upgrade_data.push(element);
-    })
+    })*/
 })
         query("SELECT * FROM SavedReminders WHERE GameName = ?",game_name).then(reminders=>{
-        reminders.forEach(element=>{
+        loading_raw_data.reminders = reminders;
+        /*reminders.forEach(element=>{
         loading_raw_data.reminders.push(element);
-    })
-})
+    })*/
+}) 
 }
