@@ -41,6 +41,17 @@ var loading_raw_data={
   reminders:[] 
 }
 
+var loading_raw_data_gc={
+  turn_data: [],// .phase, .whosturn, .placementRoundHalf   <- data for who's turn it is and what phase we are in.
+  pirate_roster_numbers: [],// This will be an array of ints to indicate which roster number to pull from when it comes to pirates.
+  pirate_ship_quantities: [], //.#shipname  <- number of each ship available to use as pirates. Sorted by ship name.
+  faction_data:[], // .faction, .fuel, .durasteel, .tibanna, .parts, .electronics, .currency, .highestSquadNumber, .highestFleetNumber, .highestArmadaNumber
+  list_of_the_dead:[],// .name, .faction
+  navies:[],// .groupName, .groupFaction, .groupLocation, .hasMoved
+  planet_data:[],// .planetID, .controllingFaction, .resource, .imageURL, .resourceQuantity, .spawnChance
+  set_up_data: []// .playerFaction, .resrouceChosen, .planetCount, .pirateFaction, .planetAssignment, .location
+}
+
 /**
   * End Define Global Variables Section
   */
@@ -110,6 +121,18 @@ const server = http.createServer(function(request, response){
       overwrite_game_gc(body)
     })
     setTimeout(()=>{response.end('ok')},1000); 
+  }
+  else if(request.url == "/load_game_gc")//Load a gc.
+  {
+    establish_database_connection("saved_games_gc");
+    let body = '';
+    request.on('data', chunk => {
+    body += chunk.toString();});
+    request.on('end', () => {
+      body = JSON.parse(body);
+      load_game_gc(body);
+    })
+    setTimeout(()=>{console.log(loading_raw_data_gc);response.end(JSON.stringify(loading_raw_data_gc))},1000);
   }
   else if(request.url == "/load_game")//Load a game.
   {
@@ -590,8 +613,11 @@ function insert_gc_setup_data_gc(game_name,setup_data)
 {
   db.run("INSERT INTO SavedSetUpData(GameName,FactionChosen,ResourcesChosen,PlanetCount,PirateFaction,PlanetAssignment,Location)VALUES(?,?,?,?,?,?,?)",game_name,setup_data.faction_chosen,setup_data.resources_chosen,setup_data.active_planets.length,setup_data.pirate_faction,setup_data.planet_assignment,setup_data.location);
   setup_data.active_planets.forEach(planet=>{
-      db.run("INSERT INTO SavedPlanetData(GameName,PlanetID,ControllingFaction,ResourceName,ResourceImagePath,ResourceQuantity,ResourceSpawnChance) VALUES(?,?,?,?,?,?,?)",game_name,planet.planet.id,planet.controlling_faction,planet.resource.name,planet.resource.image_path,planet.resource.quantity,planet.resource.spawn_chance);
+      db.run("INSERT INTO SavedPlanetData(GameName,PlanetID,ControllingFaction,ResourceName,ResourceImagePath,ResourceQuantity,ResourceSpawnChance,PlanetStatus) VALUES(?,?,?,?,?,?,?,?)",game_name,planet.planet.id,planet.controlling_faction,planet.resource.name,planet.resource.image_path,planet.resource.quantity,planet.resource.spawn_chance,"Active");
   })
+  setTimeout(()=>{  setup_data.converted_planets.forEach(planet=>{
+    db.run("INSERT INTO SavedPlanetData(GameName,PlanetID,ControllingFaction,ResourceName,ResourceImagePath,ResourceQuantity,ResourceSpawnChance,PlanetStatus) VALUES(?,?,?,?,?,?,?,?)",game_name,planet.id,"Unaligned","None",planet.image_path,0,0,"Converted");
+  })},500)
 }
 
 function insert_pirate_data_gc(game_name,pirate_options)
@@ -863,7 +889,32 @@ function delete_old_data_gc(game_name)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function load_game_gc(body)
 {
-
+  var game_name = body;
+   console.log("GC LOAD BODY: "+body);
+   query("SELECT * FROM GameData WHERE GameName = ?",game_name).then( turn_data=>{
+    loading_raw_data_gc.turn_data = turn_data;
+})
+   query("SELECT * FROM PirateRosterNumbers WHERE GameName = ?",game_name).then( all_roster_numbers=>{
+    loading_raw_data_gc.pirate_roster_numbers = all_roster_numbers;
+})
+   query("SELECT * FROM PirateShipData WHERE GameName = ?",game_name).then( pirate_ship_data=>{
+    loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data;
+})
+   query("SELECT * FROM SavedFactions WHERE GameName = ?",game_name).then( faction_data=>{
+    loading_raw_data_gc.faction_data = faction_data;
+})
+   query("SELECT * FROM SavedListOfTheDead WHERE GameName = ?",game_name).then( dead_people_list=>{
+    loading_raw_data_gc.list_of_the_dead = dead_people_list;
+})
+   query("SELECT * FROM SavedNavies WHERE GameName = ?",game_name).then( navy_data=>{
+    loading_raw_data_gc.navies = navy_data;
+})
+   query("SELECT * FROM SavedPlanetData WHERE GameName = ?",game_name).then( planet_data=>{
+    loading_raw_data_gc.planet_data = planet_data;
+})
+   query("SELECT * FROM SavedSetUpData WHERE GameName   = ?",game_name).then( gc_set_up_data=>{
+    loading_raw_data_gc.set_up_data = gc_set_up_data;
+})
 }
 
 function load_game(body)
