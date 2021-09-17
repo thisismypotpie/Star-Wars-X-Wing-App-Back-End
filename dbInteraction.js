@@ -65,7 +65,7 @@ const server = http.createServer(function(request, response){
   response.setHeader('Content-Type', 'application/json');
   response.setHeader("Access-Control-Allow-Origin","*");
   //response.setHeader("Access-Control-Allow-Origin","null");
-  console.log(request.url);
+  //console.log(request.url);
   if(request.url == "/get_data")//Get all data at the start of the game.
   {
     establish_database_connection("game_data");
@@ -132,7 +132,7 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       load_game_gc(body);
     })
-    setTimeout(()=>{console.log(loading_raw_data_gc);response.end(JSON.stringify(loading_raw_data_gc))},1000);
+    setTimeout(()=>{/*console.log(loading_raw_data_gc)*/;response.end(JSON.stringify(loading_raw_data_gc))},1000);
   }
   else if(request.url == "/load_game")//Load a game.
   {
@@ -144,7 +144,7 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       load_game(body);
     })
-    setTimeout(()=>{console.log(loading_raw_data);response.end(JSON.stringify(loading_raw_data))},1000);
+    setTimeout(()=>{/*console.log(loading_raw_data)*/;response.end(JSON.stringify(loading_raw_data))},1000);
   }
   else if(request.url == "/overwrite_game")//overwite a game.
   {
@@ -354,7 +354,7 @@ function get_upgrade_data(){
         }
       if(element.DualSided ==1)
       {
-        console.log(element.Name+" is a dual sided upgrade.");
+        //console.log(element.Name+" is a dual sided upgrade.");
         all_upgrades.push(new card_page.DualSidedUpgrade(element.Name, element.Type, element.Cost, element.ImagePath,element.ID,unique,limited,ship_specific_names,ship_size_specifics,rebels,imperials,scum,true));
       }
       else
@@ -534,7 +534,7 @@ function add_large_ship_data()
   
       if(element.LargeShipType == "largeTwoCard")
       {
-        console.log("pushing one");
+        //console.log("pushing one");
         let ship_to_push = new ship_page.Large_Ship_Two_Cards(element.ID,element.LargeShipType,element.Name,element.Attack,0,element.ForeShields, 
           element.ForeHull, maneuvers_for_this_ship, element.Energy,0,element.AftHull, element.AftShields,element.CrippledAttack,
           element.CrippledEnergy, fore_crit_cards, aft_crit_cards, element.ManeuverCard,element.Role)
@@ -544,7 +544,7 @@ function add_large_ship_data()
         }
       else if(element.LargeShipType == "largeOneCard")
       {
-        console.log("pushing two");
+        //console.log("pushing two");
         var ship_attack;
         if(element.Attack == null)
         {
@@ -666,7 +666,7 @@ async function save_game(body)
   var reminders = body[body.length-1].reminders;
   body.pop();//Get rid of save name and phase
 
-  console.log(body);
+  //console.log(body);
 
   insert_save_game_info(game_name);
   insert_turn_info(game_name,save_game_phase);
@@ -704,7 +704,7 @@ function insert_turn_info(game_name,save_game_phase)
   {
     db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
   }
-   console.log("Phase: "+save_game_phase);
+   //console.log("Phase: "+save_game_phase);
 }
 
 function insert_reminders_in_db(reminders,game_name)
@@ -715,7 +715,7 @@ function insert_reminders_in_db(reminders,game_name)
     return;
   }
   reminders.forEach(reminder=>{
-    console.log(reminder);
+    //console.log(reminder);
     db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,(reminder.when_ships_turn_maneuver_selection ? 1:0),(reminder.when_ships_turn_movement_phase ? 1:0),(reminder.when_ships_turn_attack_phase ? 1:0),(reminder.when_targeted  ? 1:0),(reminder.between_select_and_movement_phase ? 1:0),(reminder.between_movement_and_attack_phase ? 1:0),(reminder.between_rounds ? 1:0));
 
   })
@@ -732,7 +732,7 @@ function insert_save_game_info(game_name)
   {
     for(var i=0; i < body.length;i++)
     {
-      console.log("Pushing: "+body[i].team_name);
+      //console.log("Pushing: "+body[i].team_name);
       if(body[i].has_initiative_token == true)
       {
         has_init = 1;
@@ -768,10 +768,10 @@ function insert_ships_in_db(body,game_name)
 {
     for(var i=0; i < body.length;i++)
     {
-      console.log("Team number = "+(i+1));
+      //console.log("Team number = "+(i+1));
       for(var j=0; j < body[i].ship_list.length;j++)
       {
-          console.log("Ship number = "+(j+1));
+          //console.log("Ship number = "+(j+1));
           var current_ship = body[i].ship_list[j];//Just to make things look better and more readable.
           var turnOrder = j+1;
           //var upgrade_numbers = "";
@@ -803,10 +803,10 @@ function insert_ships_in_db(body,game_name)
           {
             condition_numbers = condition_numbers.slice(0,-1);
           }
-          console.log("chosen maneuver: "+current_ship.chosen_maneuver);
+          //console.log("chosen maneuver: "+current_ship.chosen_maneuver);
           if(current_ship.chosen_maneuver!= null && current_ship.chosen_maneuver!= undefined)
           {
-            console.log("we're in!");
+            //console.log("we're in!");
             chosen_maneuver = current_ship.chosen_maneuver;
           }
           if(current_ship.aft_showing == true)
@@ -821,17 +821,17 @@ function insert_ships_in_db(body,game_name)
 
           if(current_ship.chosen_pilot.ship_name.ship_type == "largeTwoCard")
           {    
-            console.log("INSERTING LARGE SHIP TWO CARDS!");      
+            //console.log("INSERTING LARGE SHIP TWO CARDS!");      
             db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy,CurrentAftAgility,CurrentAftShields,CurrentAftHull,AftShowing)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill,current_ship.current_energy,current_ship.current_aft_agility,current_ship.current_aft_shields, current_ship.current_aft_hull,aft_showing);
           }
           else if(current_ship.chosen_pilot.ship_name.ship_type == "largeOneCard")
           {
-            console.log("INSERTING LARGE SHIP ONE CARD!");
+            //console.log("INSERTING LARGE SHIP ONE CARD!");
             db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill,CurrentEnergy)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill,current_ship.current_energy);
           }
           else
           {
-            console.log("INSERTING NORMAL SHIP!");
+            //console.log("INSERTING NORMAL SHIP!");
             db.run("INSERT INTO SavedShips(SaveGameName,TeamName,TurnOrder,CritHitCards,Conditions,ChosenPilot,RosterNumber,ChosenManeuver,StressTokens,IonTokens,WeaponsDisabledTokens,FocusTokens,JamTokens,TractorBeamTokens,ReinforceTokens,CloakTokens,EvadeTokens,CurrentAttack,CurrentAgility,CurrentShields,CurrentHull,CurrentPilotSkill)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",game_name,current_ship.team_name,turnOrder,crit_hit_numbers,condition_numbers,current_ship.chosen_pilot.id,current_ship.roster_number,chosen_maneuver,current_ship.stress_tokens,current_ship.ion_tokens,current_ship.weapons_disabled_tokens,current_ship.focus_tokens,current_ship.jam_tokens,current_ship.tractor_beam_tokens,current_ship.reinforce_tokens,current_ship.cloak_tokens,current_ship.evade_tokens,current_ship.current_attack,current_ship.current_agility,current_ship.current_sheilds,current_ship.current_hull,current_ship.current_pilot_skill);
                                     //         1           2         3        4         5            6           7          8             9             10          11               12              13         14             15              16            17          18           19             20             21            22            23                                                                  1              2                  3            4                5                 6                    7                            8                    9                    10                         11                              12                            13                       14                           15                            17                         18                        19                        20                           21                           22                            23                         24
           }
@@ -849,7 +849,7 @@ function overwrite_game(body)
 
 function overwrite_game_gc(body)
 {
-  console.log("BOBBY: "+body)
+  //console.log("BOBBY: "+body)
   delete_old_data_gc(body.game_name);
   setTimeout(()=>{
     establish_database_connection("saved_games");
@@ -889,16 +889,43 @@ function delete_old_data_gc(game_name)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function load_game_gc(body)
 {
+  //Data from db comes back in arrays so I just wanted to grab element zero from those.
   var game_name = body;
    console.log("GC LOAD BODY: "+body);
    query("SELECT * FROM GameData WHERE GameName = ?",game_name).then( turn_data=>{
-    loading_raw_data_gc.turn_data = turn_data;
+    if(turn_data.length == 1)
+    {
+      loading_raw_data_gc.turn_data = turn_data[0];
+    }
+    else if(info.length > 1)
+    {
+      console.log("ERROR: Data grabbed from the db for turn info came back with more than one array entry. Defaulting to first element of array.");
+      loading_raw_data_gc.turn_data = turn_data[0];
+    }
+    else
+    {
+      console.log("ERROR: Data grabbed from the db for turn info is invalid.");
+      loading_raw_data_gc.turn_data = turn_data;
+    }
 })
    query("SELECT * FROM PirateRosterNumbers WHERE GameName = ?",game_name).then( all_roster_numbers=>{
     loading_raw_data_gc.pirate_roster_numbers = all_roster_numbers;
 })
    query("SELECT * FROM PirateShipData WHERE GameName = ?",game_name).then( pirate_ship_data=>{
-    loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data;
+    if(pirate_ship_data.length == 1)
+    {
+      loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data[0];
+    }
+    else if(gc_set_up_data.length > 1)
+    {
+      console.log("ERROR: Data grabbed from the db for setup info came back with more than one array entry. Defaulting to first element of array.");
+      loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data[0];
+    }
+    else
+    {
+      console.log("ERROR: Data grabbed from the db for setup info is invalid.");
+      loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data;
+    }
 })
    query("SELECT * FROM SavedFactions WHERE GameName = ?",game_name).then( faction_data=>{
     loading_raw_data_gc.faction_data = faction_data;
@@ -913,14 +940,28 @@ function load_game_gc(body)
     loading_raw_data_gc.planet_data = planet_data;
 })
    query("SELECT * FROM SavedSetUpData WHERE GameName   = ?",game_name).then( gc_set_up_data=>{
-    loading_raw_data_gc.set_up_data = gc_set_up_data;
+    if(gc_set_up_data.length == 1)
+    {
+      loading_raw_data_gc.set_up_data = gc_set_up_data[0];
+    }
+    else if(gc_set_up_data.length > 1)
+    {
+      console.log("ERROR: Data grabbed from the db for setup info came back with more than one array entry. Defaulting to first element of array.");
+      loading_raw_data_gc.set_up_data = gc_set_up_data[0];
+    }
+    else
+    {
+      console.log("ERROR: Data grabbed from the db for setup info is invalid.");
+      loading_raw_data_gc.set_up_data = gc_set_up_data;
+    }
+
 })
 }
 
 function load_game(body)
 {
     var game_name = body;
-    console.log("game name is: "+game_name);
+    //console.log("game name is: "+game_name);
         query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = ? ORDER BY TurnOrder Asc",game_name).then( team_names=>{
         loading_raw_data.team_data = team_names;
         /*team_names.forEach(element=>{
@@ -934,7 +975,7 @@ function load_game(body)
         })*/
     })
         query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
-        loading_raw_data.turn_data = info;
+          loading_raw_data.turn_data = info;
           /*info.forEach(element=>{
       loading_raw_data.turn_data = element;
       })*/
