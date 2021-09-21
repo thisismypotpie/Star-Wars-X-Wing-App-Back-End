@@ -49,7 +49,8 @@ var loading_raw_data_gc={
   list_of_the_dead:[],// .name, .faction
   navies:[],// .groupName, .groupFaction, .groupLocation, .hasMoved
   planet_data:[],// .planetID, .controllingFaction, .resource, .imageURL, .resourceQuantity, .spawnChance
-  set_up_data: []// .playerFaction, .resrouceChosen, .planetCount, .pirateFaction, .planetAssignment, .location
+  set_up_data: [],// .playerFaction, .resrouceChosen, .planetCount, .pirateFaction, .planetAssignment, .location
+  ship_and_combat_data: undefined
 }
 
 /**
@@ -132,7 +133,7 @@ const server = http.createServer(function(request, response){
       body = JSON.parse(body);
       load_game_gc(body);
     })
-    setTimeout(()=>{/*console.log(loading_raw_data_gc)*/;response.end(JSON.stringify(loading_raw_data_gc))},1000);
+    setTimeout(()=>{loading_raw_data_gc.ship_and_combat_data = loading_raw_data;response.end(JSON.stringify(loading_raw_data_gc))},7000);
   }
   else if(request.url == "/load_game")//Load a game.
   {
@@ -956,6 +957,11 @@ function load_game_gc(body)
     }
 
 })
+//Get ship data from saved ship db.
+setTimeout(()=>{
+  establish_database_connection("saved_games");
+  load_game(body)
+},5000);
 }
 
 function load_game(body)
