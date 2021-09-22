@@ -583,12 +583,7 @@ async function save_game_gc(body)
   {
     insert_pirate_data_gc(body.game_name,body.setup_data.pirate_options)
   }
-  if(1==2)//save if there is a combat
-  {
 
-  }
-  else//save if there is not combat.
-  {
   //Insert each navy into the regular saved games db.
   setTimeout(()=>{
     establish_database_connection("saved_games");
@@ -604,15 +599,30 @@ async function save_game_gc(body)
         })
       })
     })
+    if(body.combat_data!= undefined && body.combat_data!= null)
+    {
+      insert_turn_info(body.game_name,body.combat_data.save_game_phase);
+      insert_teams_into_table(all_ships, body.game_name);
+    }
     insert_ships_in_db(all_ships,body.game_name);
     insert_upgrades_in_db(all_ships,body.game_name);
+    if(body.combat_data.reminders !=null && body.combat_data.reminders != undefined)
+    {
+      insert_reminders_in_db(body.combat_data.reminders,body.game_name)
+    }
+    if(body.combat_data.target_locks !=null && body.combat_data.target_locks != undefined)
+    {
+      if(body.combat_data.target_locks.length>0)
+      {
+        insert_target_locks_in_db(body.game_name,body.combat_data.target_locks);
+      }
+    }
   },1000);
-  }
 }
 
 function insert_gc_setup_data_gc(game_name,setup_data)
 {
-  db.run("INSERT INTO SavedSetUpData(GameName,FactionChosen,ResourcesChosen,PlanetCount,PirateFaction,PlanetAssignment,Location)VALUES(?,?,?,?,?,?,?)",game_name,setup_data.faction_chosen,setup_data.resources_chosen,setup_data.active_planets.length,setup_data.pirate_faction,setup_data.planet_assignment,setup_data.location);
+  db.run("INSERT INTO SavedSetUpData(GameName,FactionChosen,ResourcesChosen,PlanetCount,PirateFaction,PlanetAssignment,Location)VALUES(?,?,?,?,?,?,?)",game_name,setup_data.chosen_faction,setup_data.resouces_chosen,setup_data.active_planets.length,setup_data.pirate_faction,setup_data.planet_assignment,setup_data.location);
   setup_data.active_planets.forEach(planet=>{
       db.run("INSERT INTO SavedPlanetData(GameName,PlanetID,ControllingFaction,ResourceName,ResourceImagePath,ResourceQuantity,ResourceSpawnChance,PlanetStatus) VALUES(?,?,?,?,?,?,?,?)",game_name,planet.planet.id,planet.controlling_faction,planet.resource.name,planet.resource.image_path,planet.resource.quantity,planet.resource.spawn_chance,"Active");
   })
