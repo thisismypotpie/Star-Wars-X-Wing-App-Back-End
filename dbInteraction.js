@@ -33,7 +33,7 @@ var game_data = {
   map_paths:[]
 };
 var loading_raw_data={
-  team_data: [],
+  team_data: [],// <- This is where data when loading gc combat will be stored.
   ship_data: [],
   turn_data: undefined,
   target_lock_data:[],
@@ -602,7 +602,7 @@ async function save_game_gc(body)
     if(body.combat_data!= undefined && body.combat_data!= null)
     {
       insert_turn_info(body.game_name,body.combat_data.save_game_phase);
-      insert_teams_into_table(all_ships, body.game_name);
+      insert_teams_into_table(body.combat_data.combatting_teams, body.game_name);
     }
     insert_ships_in_db(all_ships,body.game_name);
     insert_upgrades_in_db(all_ships,body.game_name);
@@ -920,7 +920,11 @@ function load_game_gc(body)
     }
 })
    query("SELECT * FROM PirateRosterNumbers WHERE GameName = ?",game_name).then( all_roster_numbers=>{
-    loading_raw_data_gc.pirate_roster_numbers = all_roster_numbers;
+
+    all_roster_numbers.forEach(roster=>{
+      loading_raw_data_gc.pirate_roster_numbers.push(roster.Roster);
+    })
+    //loading_raw_data_gc.pirate_roster_numbers = all_roster_numbers;
 })
    query("SELECT * FROM PirateShipData WHERE GameName = ?",game_name).then( pirate_ship_data=>{
     if(pirate_ship_data.length == 1)
@@ -970,6 +974,12 @@ function load_game_gc(body)
 //Get ship data from saved ship db.
 setTimeout(()=>{
   establish_database_connection("saved_games");
+  /*query("SELECT * FROM SavedTeamsTable WHERE SavedGameName =?  ORDER BY TurnOrder Asc",game_name).then(team_data=>{
+    loading_raw_data.team_combatant_info = [];
+    team_data.forEach(team=>{
+      loading_raw_data.team_combatant_info.push({team_name: team.TeamName,has_initiative: team.HasInitiative})
+    })
+  })*/ //This was meant to put combatant data into the gc raw data but I think that data already exists in team data.
   load_game(body)
 },5000);
 }
