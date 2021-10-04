@@ -9,7 +9,7 @@ const pilot_page = require('./JS Data Classes/Pilot-Variants');
 const card_page = require('./JS Data Classes/card-Variants');
 const gc_classes = require('./JS Data Classes/GC-Variants');
 const http = require('http');
-const { parse } = require('path');
+const { parse, resolve } = require('path');
 const { Console } = require('console');
 
 /**
@@ -599,13 +599,18 @@ async function save_game_gc(body)
         })
       })
     })
-    if(body.combat_data!= undefined && body.combat_data!= null)
+    if(body.combat_data!= undefined && body.combat_data!= null)//Get combat teams if there is combat.
     {
       insert_turn_info(body.game_name,body.combat_data.save_game_phase);
       insert_teams_into_table(body.combat_data.combatting_teams, body.game_name);
+      insert_ships_in_db(body.combat_data.combatting_teams,body.game_name);
+      insert_upgrades_in_db(body.combat_data.combatting_teams,body.game_name);
     }
-    insert_ships_in_db(all_ships,body.game_name);
-    insert_upgrades_in_db(all_ships,body.game_name);
+    else//Get gc faction teams.
+    {
+      insert_ships_in_db(all_ships,body.game_name);
+      insert_upgrades_in_db(all_ships,body.game_name);
+    }
     if(body.combat_data.reminders !=null && body.combat_data.reminders != undefined)
     {
       insert_reminders_in_db(body.combat_data.reminders,body.game_name)
@@ -858,16 +863,38 @@ function overwrite_game(body)
   setTimeout(()=>{save_game(body)},1000);
 }
 
-function overwrite_game_gc(body)
+async function overwrite_game_gc(body)
 {
   //console.log("BOBBY: "+body)
-  delete_old_data_gc(body.game_name);
+  await delete_old_data_gc(body.game_name);
+  await establish_database_connection("saved_games");
+  await delete_old_data(body.game_name);
+  await establish_database_connection("saved_games_gc");
+  save_game_gc(body);
+  
+  
+  /*delete_old_data_gc(body.game_name)
+  .then(()=>{
+    establish_database_connection("saved_games");
+  })
+  .then(()=>{
+    delete_old_data(body.game_name);
+  })
+  .then(()=>{
+    establish_database_connection("saved_games_gc");
+  })
+  .then(()=>{
+    save_game_gc(body);
+  })*/
+
+
+  /*delete_old_data_gc(body.game_name);
   setTimeout(()=>{
     establish_database_connection("saved_games");
     delete_old_data(body.game_name);
     setTimeout(()=>{establish_database_connection("saved_games_gc"),500})
-  },250)
-  setTimeout(()=>{save_game_gc(body)},1000);
+  },1000)
+  setTimeout(()=>{save_game_gc(body)},2000);*/
 }
 
 ////////////FUNCTIONS FOR DELETEING OLD DATA/////////////////////////////////////////////////////////////////////////
@@ -895,7 +922,6 @@ function delete_old_data_gc(game_name)
   db.run("DELETE FROM SavedPlanetData WHERE GameName ='"+game_name+"'")
   db.run("DELETE FROM SavedSetUpData WHERE GameName ='"+game_name+"'");
   console.log("Old data from gc save db has been deleted.")
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function load_game_gc(body)
