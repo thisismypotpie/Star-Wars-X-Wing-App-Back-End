@@ -16,6 +16,125 @@ const { Console } = require('console');
  * End Require Section
  */
 
+/**
+ * Define Checker Variables
+ */
+var game_data_grab_checker ={
+  get_crit_hit_cards: false,
+  get_condition_cards: false,
+  get_upgrade_cards: false,
+  get_large_crit_hit_cards: false,
+  get_maneuver_cards: false,
+  get_large_maneuver_data: false,
+  get_large_ship_data: false,
+  get_ship_data: false,
+  get_pilot_data: false,
+  get_planet_data: false,
+  get_planet_paths: false
+}
+function check_game_data_grabber()
+{
+  console.log(game_data_grab_checker);
+  if(game_data_grab_checker.get_crit_hit_cards == false ||
+     game_data_grab_checker.get_condition_cards == false ||
+     game_data_grab_checker.get_upgrade_cards == false ||
+     game_data_grab_checker.get_large_crit_hit_cards == false ||
+     game_data_grab_checker.get_maneuver_cards == false ||
+     game_data_grab_checker.get_large_maneuver_data == false ||
+     game_data_grab_checker.get_large_ship_data == false ||
+     game_data_grab_checker.get_ship_data == false ||
+     game_data_grab_checker.get_pilot_data == false ||
+     game_data_grab_checker.get_planet_data == false ||
+     game_data_grab_checker.get_planet_paths == false)
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+function reset_game_data_grabber()
+{
+  game_data_grab_checker.get_crit_hit_cards =false
+  game_data_grab_checker.get_condition_cards= false
+  game_data_grab_checker.get_upgrade_cards= false
+  game_data_grab_checker.get_large_crit_hit_cards= false
+  game_data_grab_checker.get_maneuver_cards= false
+  game_data_grab_checker.get_large_maneuver_data= false
+  game_data_grab_checker.get_large_ship_data= false
+  game_data_grab_checker.get_ship_data= false
+  game_data_grab_checker.get_pilot_data= false
+  game_data_grab_checker.get_planet_data= false
+  game_data_grab_checker.get_planet_paths= false
+}
+
+var game_data_save_checker={
+game_info_saved: false,
+turn_info_saved: false,
+team_info_saved: false,
+ship_info_saved: false,
+upgrade_info_saved: false,
+reminder_info_saved: false,
+target_locks_saved: false
+}
+function check_game_data_save_checker()
+{
+    console.log(game_data_save_checker);
+    if(  game_data_save_checker.game_info_saved == false|| 
+      game_data_save_checker.turn_info_saved== false||
+      game_data_save_checker.team_info_saved== false||
+      game_data_save_checker.ship_info_saved== false||
+      game_data_save_checker.upgrade_info_saved== false||
+      game_data_save_checker.reminder_info_saved== false||
+      game_data_save_checker.target_locks_saved== false)
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
+}
+function reset_game_data_save_checker()
+{
+  game_data_save_checker.game_info_saved = false
+  game_data_save_checker.turn_info_saved= false
+  game_data_save_checker.team_info_saved= false
+  game_data_save_checker.ship_info_saved= false
+  game_data_save_checker.upgrade_info_saved= false
+  game_data_save_checker.reminder_info_saved= false
+  game_data_save_checker.target_locks_saved= false
+}
+
+var game_data_names_checker={ //may not need.
+   freeplay_names_grabbed: false,
+   gc_names_grabbed: false
+}
+
+function check_game_data_names_checker()
+{
+  console.log(game_data_names_checker)
+  if(game_data_names_checker.freeplay_names_grabbed == false ||
+     game_data_names_checker.gc_names_grabbed == false)
+  {
+     return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+function reset_game_data_names_checker()
+{
+  game_data_names_checker.freeplay_names_grabbed = false;
+  game_data_names_checker.gc_names_grabbed = false;
+}
+/**
+ * End Checker Variables
+ */
+
 
 /**
  * Define Global Variables
@@ -40,7 +159,6 @@ var loading_raw_data={
   upgrade_data:[],
   reminders:[] 
 }
-
 var loading_raw_data_gc={
   turn_data: [],// .phase, .whosturn, .placementRoundHalf   <- data for who's turn it is and what phase we are in.
   pirate_roster_numbers: [],// This will be an array of ints to indicate which roster number to pull from when it comes to pirates.
@@ -52,7 +170,6 @@ var loading_raw_data_gc={
   set_up_data: [],// .playerFaction, .resrouceChosen, .planetCount, .pirateFaction, .planetAssignment, .location
   ship_and_combat_data: undefined
 }
-
 /**
   * End Define Global Variables Section
   */
@@ -67,118 +184,7 @@ const server = http.createServer(function(request, response){
   response.setHeader("Access-Control-Allow-Origin","*");
   //response.setHeader("Access-Control-Allow-Origin","null");
   //console.log(request.url);
-  if(request.url == "/get_data")//Get all data at the start of the game.
-  {
-    establish_database_connection("game_data");
-    get_crit_cards_data();
-    get_condition_data();
-    get_upgrade_data();   
-    get_large_crit_hit_data();
-    get_maneuver_data();
-    get_planet_data();
-    get_map_paths();
-    setTimeout(()=>{response.end(JSON.stringify(game_data))},3000);
-  }
-  else if(request.url == "/save_game")//Save a game.
-  {
-    establish_database_connection("saved_games");
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      save_game(body); 
-    })
-    setTimeout(()=>{response.end('ok')},1000); 
-  }
-  else if(request.url == "/save_game_gc")//Save galactic conquest game.
-  {
-    establish_database_connection("saved_games_gc");
-    //Add combat indicator to body to determine if we need to save a game in combat.
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      save_game_gc(body);
-      if(1==2)
-      {
-        establish_database_connection("saved_games");
-        //There is a combat phase we need to save.
-      }
-    })
-    setTimeout(()=>{response.end('ok')},1000); 
-  }
-  else if(request.url == "/overwrite_game_gc")//overwrite a gc.
-  {
-    establish_database_connection("saved_games_gc");
-    //Add combat indicator to body to determine if we need to save a game in combat.
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      //save_game_gc(body);
-      overwrite_game_gc(body)
-    })
-    setTimeout(()=>{response.end('ok')},1000); 
-  }
-  else if(request.url == "/load_game_gc")//Load a gc.
-  {
-    establish_database_connection("saved_games_gc");
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      load_game_gc(body);
-    })
-    setTimeout(()=>{loading_raw_data_gc.ship_and_combat_data = loading_raw_data;response.end(JSON.stringify(loading_raw_data_gc))},7000);
-  }
-  else if(request.url == "/load_game")//Load a game.
-  {
-    establish_database_connection("saved_games");
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      load_game(body);
-    })
-    setTimeout(()=>{/*console.log(loading_raw_data)*/;response.end(JSON.stringify(loading_raw_data))},1000);
-  }
-  else if(request.url == "/overwrite_game")//overwite a game.
-  {
-    establish_database_connection("saved_games");
-    let body = '';
-    request.on('data', chunk => {
-    body += chunk.toString();});
-    request.on('end', () => {
-      body = JSON.parse(body);
-      overwrite_game(body);
-    })
-    setTimeout(()=>{response.end('ok')},1000);
-  }
-  else if(request.url == "/get_game_names")//get all names of currently saved games.
-  {
-    establish_database_connection("saved_games");
-    var game_names = {
-      reg_game_names: [],
-      gc_game_names: []
-    }
-    game_names.reg_game_names = get_game_names();
-    setTimeout(()=>{
-      establish_database_connection("saved_games_gc");
-      game_names.gc_game_names = get_game_names();
-    },333);
-    setTimeout(()=>{console.log("Leaving back-end for get game names.");response.end(JSON.stringify(game_names))},2000);
-  }
-  else
-  {
-    response.statusCode = 400;
-    response.statusMessage = "ERROR: Invlaid URL";
-    response.end();
-  }
+  main_response_function(request, response);
 });
 var port = /*process.env.PORT||*/3000;
 server.listen(port);
@@ -186,6 +192,134 @@ server.listen(port);
  * End Main Response Function
  */
 
+
+ function main_response_function(request,response)
+ {
+   if(request.url == "/get_data")//Get all data at the start of the game.
+   {
+     establish_database_connection("game_data").then(()=>{
+        get_crit_cards_data();
+        get_condition_data();
+        get_upgrade_data();   
+        get_large_crit_hit_data();
+        get_maneuver_data();
+        get_planet_data();
+        get_map_paths();
+        var data_checker = setInterval(()=>{if(check_game_data_grabber()){ reset_game_data_grabber(); clearInterval(data_checker); response.end(JSON.stringify(game_data));}},500);
+     })
+   }
+   else if(request.url == "/save_game")//Save a game.
+   {
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       establish_database_connection("saved_games").then(()=>{
+          save_game(body); 
+          var data_checker = setInterval(()=>{if(check_game_data_save_checker()){ reset_game_data_save_checker(); clearInterval(data_checker); response.end(response.end('ok'));}},500);
+       })
+     })
+   }
+   else if(request.url == "/save_game_gc")//Save galactic conquest game.
+   {
+     establish_database_connection("saved_games_gc");
+     //Add combat indicator to body to determine if we need to save a game in combat.
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       save_game_gc(body);
+       if(1==2)
+       {
+         establish_database_connection("saved_games");
+         //There is a combat phase we need to save.
+       }
+     })
+     setTimeout(()=>{response.end('ok')},1000); 
+   }
+   else if(request.url == "/overwrite_game_gc")//overwrite a gc.
+   {
+     establish_database_connection("saved_games_gc");
+     //Add combat indicator to body to determine if we need to save a game in combat.
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       //save_game_gc(body);
+       overwrite_game_gc(body)
+     })
+     setTimeout(()=>{response.end('ok')},1000); 
+   }
+   else if(request.url == "/load_game_gc")//Load a gc.
+   {
+     establish_database_connection("saved_games_gc");
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       load_game_gc(body);
+     })
+     setTimeout(()=>{loading_raw_data_gc.ship_and_combat_data = loading_raw_data;response.end(JSON.stringify(loading_raw_data_gc))},7000);
+   }
+   else if(request.url == "/load_game")//Load a game.
+   {
+     establish_database_connection("saved_games");
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       load_game(body);
+     })
+     setTimeout(()=>{/*console.log(loading_raw_data)*/;response.end(JSON.stringify(loading_raw_data))},1000);
+   }
+   else if(request.url == "/overwrite_game")//overwite a game.
+   {
+     establish_database_connection("saved_games");
+     let body = '';
+     request.on('data', chunk => {
+     body += chunk.toString();});
+     request.on('end', () => {
+       body = JSON.parse(body);
+       overwrite_game(body);
+     })
+     setTimeout(()=>{response.end('ok')},1000);
+   }
+   else if(request.url == "/get_game_names")//get all names of currently saved games.
+   {
+     establish_database_connection("saved_games").then(async()=>{
+      var game_names = {
+        reg_game_names: undefined,
+        gc_game_names: undefined
+      }
+      game_names.reg_game_names = await get_game_names();
+      var interval = setInterval(()=>{if(game_names.reg_game_names != undefined){
+        clearInterval(interval);
+        establish_database_connection("saved_games_gc").then(async()=>{
+          game_names.gc_game_names = await get_game_names();
+          var interval2 = setInterval(()=>{if(game_names.gc_game_names != undefined){
+            clearInterval(interval2);
+            var interval3 = setInterval(()=>{if(check_game_data_names_checker)
+            {
+              clearInterval(interval3);
+              reset_game_data_names_checker();
+              response.end(JSON.stringify(game_names))}})
+          }},500);
+        });
+      }},500)
+     })
+   }
+   else
+   {
+     response.statusCode = 400;
+     response.statusMessage = "ERROR: Invlaid URL";
+     response.end();
+   }
+ }
 function get_ship_data()
 {
   let ship_list = [];
@@ -211,6 +345,7 @@ function get_ship_data()
       console.log("SMALL/MEDUIM SHIP LOADED. LENGTH: "+ship_list.length);
       game_data.ship_list = ship_list;
       get_pilot_data();
+      game_data_grab_checker.get_ship_data = true;
       return ship_list;
   })
 }
@@ -225,6 +360,7 @@ function get_maneuver_data()
     console.log("SMALL/MEDIUM SHIP MANEUVERS LOADED. LENGTH: "+all_maneuvers.length);
     game_data.all_maneuvers = all_maneuvers;
     get_large_maneuver_data();
+    game_data_grab_checker.get_maneuver_cards = true;
     return all_maneuvers;
   })
 
@@ -239,6 +375,7 @@ function get_planet_data()
     })
     console.log("PLANETS LOADED. LENGTH: "+all_planets.length);
     game_data.all_planets = all_planets;
+    game_data_grab_checker.get_planet_data = true;
     return all_planets;
   })
 }
@@ -252,6 +389,7 @@ function get_map_paths()
     })
     console.log("MAP PATHS LOADED. LENGTH: "+all_paths.length);
     game_data.map_paths = all_paths;
+    game_data_grab_checker.get_planet_paths = true;
     return all_paths;
   })
 }
@@ -266,6 +404,7 @@ function get_large_maneuver_data()
   console.log("LARGE SHIP MANEUVERS LOADED. LENGTH: "+all_maneuvers.length);
   game_data.all_maneuvers = game_data.all_maneuvers.concat(all_maneuvers);
   get_ship_data();
+  game_data_grab_checker.get_large_maneuver_data = true;
   return all_maneuvers;
   })
 }
@@ -303,6 +442,7 @@ function get_pilot_data()
     game_data.all_pilots = all_pilots;
     console.log("PILOTS COMPLETE. LENGTH: "+all_pilots.length);
     add_large_ship_data();
+    game_data_grab_checker.get_pilot_data = true;
     return all_pilots;
   })
 }
@@ -366,6 +506,7 @@ function get_upgrade_data(){
     })
     console.log("UPGRADE CARDS COMPLETE. LENGTH: "+all_upgrades.length);
     game_data.all_upgrades = all_upgrades;
+    game_data_grab_checker.get_upgrade_cards = true;
     return all_upgrades;
   })
 }
@@ -380,6 +521,7 @@ function get_condition_data()
     })
     console.log("CONDITION CARDS COMPLETE. LENGTH: "+all_conditions.length);
     game_data.all_conditions = all_conditions;
+    game_data_grab_checker.get_condition_cards = true;
     return all_conditions;
   });
 }
@@ -394,6 +536,7 @@ function get_crit_cards_data()
     });
     console.log("CRITICAL HIT CARDS COMPLETE. LENGTH: "+all_crit_cards.length);
     game_data.all_crit_cards = all_crit_cards;
+    game_data_grab_checker.get_crit_hit_cards = true;
     return all_crit_cards;
   })
 }
@@ -407,6 +550,7 @@ function get_large_crit_hit_data()
     })
     console.log("LARGE CRITICAL HIT CARD COMPLETE. LENGTH: "+large_crit_hits.length);
     game_data.all_large_crit_hit_cards = large_crit_hits;
+    game_data_grab_checker.get_large_crit_hit_cards = true;
     return large_crit_hits;
   })
 }
@@ -435,6 +579,7 @@ function query(sql,args)
   })
 }
 
+//Returns promises based on whether or not a connection is established.
 function establish_database_connection(db_connection_name)
 {
 if(db_connection_name == "game_data")
@@ -446,11 +591,16 @@ if(dbExists)
   db = new sqlite3.Database('./GameDB.db', sqlite3,(err)=>{
     if(err != null)
     {
-        console.log(err);    
-        return;  
+      return new Promise((resolve,reject) => {
+        console.log(err);     
+        reject();
+      })
     }
  });
- console.log("Connection established with main game data db.");
+ return new Promise((resolve,reject) => {
+  console.log("Connection established with main game data db.");
+  resolve();
+})
 }
 }
 else if(db_connection_name == "saved_games")
@@ -462,11 +612,16 @@ if(dbExists)
   db = new sqlite3.Database('./SavedGameInfoDB.db', sqlite3,(err)=>{
     if(err != null)
     {
-        console.log(err);    
-        return;  
+      return new Promise((resolve,reject) => {
+        console.log(err);     
+        reject();
+      }) 
     }
  });
- console.log("Connection established with saved games db.");
+ return new Promise((resolve,reject) => {
+  console.log("Connection established with saved games db.");
+  resolve();
+})
 }
 }
 else if(db_connection_name == "saved_games_gc")
@@ -478,11 +633,16 @@ if(dbExists)
   db = new sqlite3.Database('./GalactiConquestSavedGamesDB.db', sqlite3,(err)=>{
     if(err != null)
     {
-        console.log(err);    
-        return;  
+      return new Promise((resolve,reject) => {
+        console.log(err);     
+        reject();
+      }) 
     }
  });
- console.log("Connection established with galactic conquest saves db.");
+ return new Promise((resolve,reject) => {
+  console.log("Connection established with galactic conquest saves db.");
+  resolve();
+})
 }
 }
 }
@@ -566,6 +726,7 @@ function add_large_ship_data()
       }
     })
     console.log("LARGE SHIP LOADED");
+    game_data_grab_checker.get_large_ship_data = true;
   })
 }
 
@@ -696,6 +857,14 @@ async function save_game(body)
     {
       insert_target_locks_in_db(game_name,target_locks);
     }
+    else
+    {
+      game_data_save_checker.target_locks_saved = true;
+    }
+  }
+  else
+  {
+    game_data_save_checker.target_locks_saved = true;
   }
 }
 
@@ -720,6 +889,7 @@ function insert_turn_info(game_name,save_game_phase)
   {
     db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
   }
+  game_data_save_checker.turn_info_saved = true;
    //console.log("Phase: "+save_game_phase);
 }
 
@@ -728,6 +898,7 @@ function insert_reminders_in_db(reminders,game_name)
   if(reminders == null || reminders.length <= 0)//If there are no reminders, then this will be null.
   {
     console.log("There were no reminders.");
+    game_data_save_checker.reminder_info_saved = true;
     return;
   }
   reminders.forEach(reminder=>{
@@ -735,13 +906,15 @@ function insert_reminders_in_db(reminders,game_name)
     db.run("INSERT INTO SavedReminders(GameName,Message,Team,RosterNumber,ShipTurnManeuverSelection,ShipTurnMovementPhase,ShipTurnAttackPhase,WhenTargeted,BetweenManeuverAndMovement,BetweenMovementAndAttack,BetweenRounds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",game_name,reminder.message,reminder.team,reminder.roster,(reminder.when_ships_turn_maneuver_selection ? 1:0),(reminder.when_ships_turn_movement_phase ? 1:0),(reminder.when_ships_turn_attack_phase ? 1:0),(reminder.when_targeted  ? 1:0),(reminder.between_select_and_movement_phase ? 1:0),(reminder.between_movement_and_attack_phase ? 1:0),(reminder.between_rounds ? 1:0));
 
   })
-  console.log("reminders loaded into db.")
+  console.log("reminders loaded into db.");
+  game_data_save_checker.reminder_info_saved = true;
 }
 
 function insert_save_game_info(game_name)
 {
   console.log("Begin insert_save_game_info...")
   db.run("INSERT INTO GameIdentifiers(GameName) VALUES(?)",game_name);
+  game_data_save_checker.game_info_saved = true;
 }
 
   function insert_teams_into_table(body,game_name)
@@ -760,7 +933,8 @@ function insert_save_game_info(game_name)
       var turnOrder = i+1;
       db.run("INSERT INTO SavedTeamsTable(SavedGameName,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_name,body[i].team_name,has_init,turnOrder);
     }
-    console.log("END insert_teams_into_table...")
+    console.log("END insert_teams_into_table...");
+    game_data_save_checker.team_info_saved = true;
   }
 
 function insert_upgrades_in_db(body,game_name)
@@ -778,6 +952,7 @@ function insert_upgrades_in_db(body,game_name)
         }
     }
   }
+  game_data_save_checker.upgrade_info_saved = true;
 }
 
 function insert_ships_in_db(body,game_name)
@@ -854,13 +1029,14 @@ function insert_ships_in_db(body,game_name)
       }
     }
     console.log("ALL DONE WITH SHIPS!");
+    game_data_save_checker.ship_info_saved = true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function overwrite_game(body)
+async function overwrite_game(body)
 {
-  delete_old_data(body[body.length-1].save_game_name);
-  setTimeout(()=>{save_game(body)},1000);
+  await delete_old_data(body[body.length-1].save_game_name);
+  save_game(body);
 }
 
 async function overwrite_game_gc(body)
