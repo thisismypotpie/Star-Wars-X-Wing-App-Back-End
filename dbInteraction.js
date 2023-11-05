@@ -6,323 +6,16 @@ var sqlite3 = require('sqlite3').verbose();
 var fs = require('fs');
 const ship_page = require('./JS Data Classes/Ship-Variants.js');
 const maneuver_page = require('./JS Data Classes/Maneuvers.js');
-const pilot_page = require('./JS Data Classes/Pilot-Variants');
-const card_page = require('./JS Data Classes/card-Variants');
-const gc_classes = require('./JS Data Classes/GC-Variants');
+const pilot_page = require('./JS Data Classes/Pilot-Variants.js');
+const card_page = require('./JS Data Classes/card-Variants.js');
+const gc_classes = require('./JS Data Classes/GC-Variants.js');
+var back_end_data_checker = require('./JS Data Classes/Back-End-Data-Checkers.js');
 const http = require('http');
 const { parse, resolve } = require('path');
 const { Console } = require('console');
 
 /**
  * End Require Section
- */
-
-
-/**
- * Define Checker Variables
- * This is used to confirm that data retrieval is complete for at least one of the following datatypes. 
- */
-var game_data_grab_checker ={
-  get_crit_hit_cards: false,
-  get_condition_cards: false,
-  get_upgrade_cards: false,
-  get_large_crit_hit_cards: false,
-  get_maneuver_cards: false,
-  get_large_maneuver_data: false,
-  get_large_ship_data: false,
-  get_ship_data: false,
-  get_pilot_data: false,
-  get_planet_data: false,
-  get_planet_paths: false
-}
-
-//Checks to see if any types of data have been retrieved. 
-function check_game_data_grabber()
-{
-  //console.log(game_data_grab_checker);
-  if(game_data_grab_checker.get_crit_hit_cards == false ||
-     game_data_grab_checker.get_condition_cards == false ||
-     game_data_grab_checker.get_upgrade_cards == false ||
-     game_data_grab_checker.get_large_crit_hit_cards == false ||
-     game_data_grab_checker.get_maneuver_cards == false ||
-     game_data_grab_checker.get_large_maneuver_data == false ||
-     game_data_grab_checker.get_large_ship_data == false ||
-     game_data_grab_checker.get_ship_data == false ||
-     game_data_grab_checker.get_pilot_data == false ||
-     game_data_grab_checker.get_planet_data == false ||
-     game_data_grab_checker.get_planet_paths == false)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-
-//Sets all booleans that make up the data grabber to false.   
-}
-function reset_game_data_grabber()
-{
-  game_data_grab_checker.get_crit_hit_cards =false
-  game_data_grab_checker.get_condition_cards= false
-  game_data_grab_checker.get_upgrade_cards= false
-  game_data_grab_checker.get_large_crit_hit_cards= false
-  game_data_grab_checker.get_maneuver_cards= false
-  game_data_grab_checker.get_large_maneuver_data= false
-  game_data_grab_checker.get_large_ship_data= false
-  game_data_grab_checker.get_ship_data= false
-  game_data_grab_checker.get_pilot_data= false
-  game_data_grab_checker.get_planet_data= false
-  game_data_grab_checker.get_planet_paths= false
-}
-
-//Acts as a confrimation that a specific type of game data was saved to the database. 
-var game_data_save_checker={
-game_info_saved: false,
-turn_info_saved: false,
-team_info_saved: false,
-ship_info_saved: false,
-upgrade_info_saved: false,
-reminder_info_saved: false,
-target_locks_saved: false
-}
-
-//Checks to see if any of the game save datatypes are missing. 
-function check_game_data_save_checker()
-{
-    //console.log(game_data_save_checker);
-    if(  game_data_save_checker.game_info_saved == false|| 
-      game_data_save_checker.turn_info_saved== false||
-      game_data_save_checker.team_info_saved== false||
-      game_data_save_checker.ship_info_saved== false||
-      game_data_save_checker.upgrade_info_saved== false||
-      game_data_save_checker.reminder_info_saved== false||
-      game_data_save_checker.target_locks_saved== false)
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
-}
-
-//Resets all of the game data type variables to false. Usually used if we need to do multiple saves at once. 
-function reset_game_data_save_checker()
-{
-  game_data_save_checker.game_info_saved = false
-  game_data_save_checker.turn_info_saved= false
-  game_data_save_checker.team_info_saved= false
-  game_data_save_checker.ship_info_saved= false
-  game_data_save_checker.upgrade_info_saved= false
-  game_data_save_checker.reminder_info_saved= false
-  game_data_save_checker.target_locks_saved= false
-}
-
-//Verifies that the old game data has been overwritten when saving a game. 
-var game_data_overwrite_freeplay_checker={
-   old_data_deleted:false
-}
-function check_game_data_overwrite_freeplay_checker()
-{
-  //console.log(game_data_overwrite_freeplay_checker);
-  if(check_game_data_save_checker() == false ||
-     game_data_overwrite_freeplay_checker == false)
-     {
-       return false;
-     }
-  else
-  {
-    return true;
-  }
-}
-
-
-function reset_check_game_data_overwrite_freeplay_checker()
-{
-  reset_game_data_save_checker();
-  game_data_overwrite_freeplay_checker.old_data_deleted = false;
-}
-
-var game_data_names_checker={
-   freeplay_names_grabbed: false,
-   gc_names_grabbed: false
-}
-function check_game_data_names_checker()
-{
-  //console.log(game_data_names_checker)
-  if(game_data_names_checker.freeplay_names_grabbed == false ||
-     game_data_names_checker.gc_names_grabbed == false)
-  {
-     return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-function reset_game_data_names_checker()
-{
-  game_data_names_checker.freeplay_names_grabbed = false;
-  game_data_names_checker.gc_names_grabbed = false;
-}
-
-var game_data_freeplay_load_checker={
-  team_data: false,
-  ship_data: false,
-  turn_data: false,
-  target_lock_data: false,
-  upgrade_data: false,
-  reminder_data: false
-}
-function check_game_data_freeplay_load_checker()
-{
-  //console.log(game_data_freeplay_load_checker);
-    if(  game_data_freeplay_load_checker.team_data== false ||
-      game_data_freeplay_load_checker.ship_data== false ||
-      game_data_freeplay_load_checker.turn_data== false ||
-      game_data_freeplay_load_checker.target_lock_data== false ||
-      game_data_freeplay_load_checker.upgrade_data== false ||
-      game_data_freeplay_load_checker.reminder_data== false )
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
-}
-function reset_game_data_freeplay_load_checker()
-{
-  game_data_freeplay_load_checker.team_data= false
-  game_data_freeplay_load_checker.ship_data= false
-  game_data_freeplay_load_checker.turn_data= false
-  game_data_freeplay_load_checker.target_lock_data= false
-  game_data_freeplay_load_checker.upgrade_data= false
-  game_data_freeplay_load_checker.reminder_data= false
-}
-
-var game_data_gc_save_checker = {
-  setup_data_saved: false,
-  faction_data_saved: false,
-  game_data_saved: false,
-  pirate_data_saved: false
-}
-function check_data_gc_save_checker()
-{
-  //console.log(game_data_gc_save_checker);
-    if(  game_data_gc_save_checker.setup_data_saved== false||
-      game_data_gc_save_checker.faction_data_saved== false||
-      game_data_gc_save_checker.game_data_saved== false||
-      game_data_gc_save_checker.pirate_data_saved== false)
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
-}
-function check_total_gc_save_and_save_checker()
-{
-    if(check_data_gc_save_checker() == false ||
-       check_game_data_save_checker() == false)
-    {
-       return false;
-    }
-    else
-    {
-      return true;
-    }
-}
-function reset_gc_save_checker()
-{
-  reset_game_data_save_checker();
-  game_data_gc_save_checker.setup_data_saved= false
-  game_data_gc_save_checker.faction_data_saved= false
-  game_data_gc_save_checker.game_data_saved= false
-  game_data_gc_save_checker.pirate_data_saved= false
-}
-
-var game_data_overwrite_gc_checker =
-{
-   gc_data_deleted: false
-}
-function check_game_data_overwrite_gc_checker()
-{
-  //console.log(game_data_overwrite_gc_checker);
-  if(check_game_data_overwrite_freeplay_checker()==false ||
-     game_data_overwrite_gc_checker.gc_data_deleted == false ||
-     check_data_gc_save_checker()==false)
-     {
-       return false;
-     }
-  else
-  {
-    return true;
-  }
-}
-function reset_gc_overwrite_checker()
-{
-  reset_check_game_data_overwrite_freeplay_checker();
-  reset_gc_save_checker();
-  game_data_overwrite_freeplay_checker.old_data_deleted = false;
-}
-
-var game_data_gc_load_checker={
-  gc_turn_data: false,
-  pirate_rosters: false,
-  pirate_data: false,
-  faction_data: false,
-  dead_people_data: false,
-  navy_data: false,
-  planet_data: false,
-  setup_data: false
-}
-function check_game_data_load_gc_checker()
-{
-  if(  game_data_gc_load_checker.gc_turn_data == false ||
-    game_data_gc_load_checker.pirate_rosters == false||
-    game_data_gc_load_checker.pirate_data == false||
-    game_data_gc_load_checker.faction_data == false||
-    game_data_gc_load_checker.dead_people_data == false||
-    game_data_gc_load_checker.navy_data == false||
-    game_data_gc_load_checker.planet_data == false||
-    game_data_gc_load_checker.setup_data == false)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-function check_game_Data_entire_gc_load_check()
-{
-  if(check_game_data_load_gc_checker() == false ||
-  check_game_data_freeplay_load_checker() == false)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-function reset_gc_load_checker()
-{
-  reset_game_data_freeplay_load_checker();
-  game_data_gc_load_checker.gc_turn_data = false 
-  game_data_gc_load_checker.pirate_rosters = false
-  game_data_gc_load_checker.pirate_data = false
-  game_data_gc_load_checker.faction_data = false
-  game_data_gc_load_checker.dead_people_data = false
-  game_data_gc_load_checker.navy_data = false
-  game_data_gc_load_checker.planet_data = false
-  game_data_gc_load_checker.setup_data = false
-}
-/**
- * End Checker Variables
  */
 
 
@@ -395,7 +88,7 @@ server.listen(port);
         get_maneuver_data();
         get_planet_data();
         get_map_paths();
-        var data_checker = setInterval(()=>{if(check_game_data_grabber()){ reset_game_data_grabber(); clearInterval(data_checker); response.end(JSON.stringify(game_data));}},500);
+        var data_checker = setInterval(()=>{if(back_end_data_checker.check_game_data_grabber()){ back_end_data_checker.reset_game_data_grabber(); clearInterval(data_checker); response.end(JSON.stringify(game_data));}},500);
      })
    }
    else if(request.url == "/save_game")//Save a game.
@@ -549,7 +242,7 @@ function get_ship_data()
       //console.log("SMALL/MEDUIM SHIP LOADED. LENGTH: "+ship_list.length);
       game_data.ship_list = ship_list;
       get_pilot_data();
-      game_data_grab_checker.get_ship_data = true;
+      back_end_data_checker.game_data_grab_checker.get_ship_data = true;
       return ship_list;
   })
 }
@@ -564,7 +257,7 @@ function get_maneuver_data()
     //console.log("SMALL/MEDIUM SHIP MANEUVERS LOADED. LENGTH: "+all_maneuvers.length);
     game_data.all_maneuvers = all_maneuvers;
     get_large_maneuver_data();
-    game_data_grab_checker.get_maneuver_cards = true;
+    back_end_data_checker.game_data_grab_checker.get_maneuver_cards = true;
     return all_maneuvers;
   })
 
@@ -579,7 +272,7 @@ function get_planet_data()
     })
     //console.log("PLANETS LOADED. LENGTH: "+all_planets.length);
     game_data.all_planets = all_planets;
-    game_data_grab_checker.get_planet_data = true;
+    back_end_data_checker.game_data_grab_checker.get_planet_data = true;
     return all_planets;
   })
 }
@@ -593,7 +286,7 @@ function get_map_paths()
     })
     //console.log("MAP PATHS LOADED. LENGTH: "+all_paths.length);
     game_data.map_paths = all_paths;
-    game_data_grab_checker.get_planet_paths = true;
+    back_end_data_checker.game_data_grab_checker.get_planet_paths = true;
     return all_paths;
   })
 }
@@ -608,7 +301,7 @@ function get_large_maneuver_data()
   //console.log("LARGE SHIP MANEUVERS LOADED. LENGTH: "+all_maneuvers.length);
   game_data.all_maneuvers = game_data.all_maneuvers.concat(all_maneuvers);
   get_ship_data();
-  game_data_grab_checker.get_large_maneuver_data = true;
+  back_end_data_checker.game_data_grab_checker.get_large_maneuver_data = true;
   return all_maneuvers;
   })
 }
@@ -647,7 +340,7 @@ function get_pilot_data()
     game_data.all_pilots = all_pilots;
     //console.log("PILOTS COMPLETE. LENGTH: "+all_pilots.length);
     add_large_ship_data();
-    game_data_grab_checker.get_pilot_data = true;
+    back_end_data_checker.game_data_grab_checker.get_pilot_data = true;
     return all_pilots;
   })
 }
@@ -711,7 +404,7 @@ function get_upgrade_data(){
     })
     //console.log("UPGRADE CARDS COMPLETE. LENGTH: "+all_upgrades.length);
     game_data.all_upgrades = all_upgrades;
-    game_data_grab_checker.get_upgrade_cards = true;
+    back_end_data_checker.game_data_grab_checker.get_upgrade_cards = true;
     return all_upgrades;
   })
 }
@@ -726,7 +419,7 @@ function get_condition_data()
     })
     //console.log("CONDITION CARDS COMPLETE. LENGTH: "+all_conditions.length);
     game_data.all_conditions = all_conditions;
-    game_data_grab_checker.get_condition_cards = true;
+    back_end_data_checker.game_data_grab_checker.get_condition_cards = true;
     return all_conditions;
   });
 }
@@ -741,7 +434,8 @@ function get_crit_cards_data()
     });
     //console.log("CRITICAL HIT CARDS COMPLETE. LENGTH: "+all_crit_cards.length);
     game_data.all_crit_cards = all_crit_cards;
-    game_data_grab_checker.get_crit_hit_cards = true;
+    console.log("Checker: "+ back_end_data_checker.game_data_grab_checker);
+    back_end_data_checker.game_data_grab_checker.get_crit_hit_cards = true;
     return all_crit_cards;
   })
 }
@@ -755,7 +449,7 @@ function get_large_crit_hit_data()
     })
     //console.log("LARGE CRITICAL HIT CARD COMPLETE. LENGTH: "+large_crit_hits.length);
     game_data.all_large_crit_hit_cards = large_crit_hits;
-    game_data_grab_checker.get_large_crit_hit_cards = true;
+    back_end_data_checker.game_data_grab_checker.get_large_crit_hit_cards = true;
     return large_crit_hits;
   })
 }
@@ -945,7 +639,7 @@ function add_large_ship_data()
       }
     })
     //console.log("LARGE SHIP LOADED");
-    game_data_grab_checker.get_large_ship_data = true;
+    back_end_data_checker.game_data_grab_checker.get_large_ship_data = true;
   })
 }
 
