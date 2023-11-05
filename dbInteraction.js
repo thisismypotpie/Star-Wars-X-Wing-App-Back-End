@@ -1,5 +1,6 @@
 /**
  * Require Section
+ * List of Object files and node packages needed to run the back end. 
  */
 var sqlite3 = require('sqlite3').verbose();
 var fs = require('fs');
@@ -16,8 +17,10 @@ const { Console } = require('console');
  * End Require Section
  */
 
+
 /**
  * Define Checker Variables
+ * This is used to confirm that data retrieval is complete for at least one of the following datatypes. 
  */
 var game_data_grab_checker ={
   get_crit_hit_cards: false,
@@ -32,6 +35,8 @@ var game_data_grab_checker ={
   get_planet_data: false,
   get_planet_paths: false
 }
+
+//Checks to see if any types of data have been retrieved. 
 function check_game_data_grabber()
 {
   //console.log(game_data_grab_checker);
@@ -53,6 +58,8 @@ function check_game_data_grabber()
   {
     return true;
   }
+
+//Sets all booleans that make up the data grabber to false.   
 }
 function reset_game_data_grabber()
 {
@@ -69,6 +76,7 @@ function reset_game_data_grabber()
   game_data_grab_checker.get_planet_paths= false
 }
 
+//Acts as a confrimation that a specific type of game data was saved to the database. 
 var game_data_save_checker={
 game_info_saved: false,
 turn_info_saved: false,
@@ -78,6 +86,8 @@ upgrade_info_saved: false,
 reminder_info_saved: false,
 target_locks_saved: false
 }
+
+//Checks to see if any of the game save datatypes are missing. 
 function check_game_data_save_checker()
 {
     //console.log(game_data_save_checker);
@@ -96,6 +106,8 @@ function check_game_data_save_checker()
       return true;
     }
 }
+
+//Resets all of the game data type variables to false. Usually used if we need to do multiple saves at once. 
 function reset_game_data_save_checker()
 {
   game_data_save_checker.game_info_saved = false
@@ -107,6 +119,7 @@ function reset_game_data_save_checker()
   game_data_save_checker.target_locks_saved= false
 }
 
+//Verifies that the old game data has been overwritten when saving a game. 
 var game_data_overwrite_freeplay_checker={
    old_data_deleted:false
 }
@@ -123,6 +136,8 @@ function check_game_data_overwrite_freeplay_checker()
     return true;
   }
 }
+
+
 function reset_check_game_data_overwrite_freeplay_checker()
 {
   reset_game_data_save_checker();
