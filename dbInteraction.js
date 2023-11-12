@@ -9,7 +9,7 @@ const maneuver_page = require('./JS Data Classes/Maneuvers.js');
 const pilot_page = require('./JS Data Classes/Pilot-Variants.js');
 const card_page = require('./JS Data Classes/card-Variants.js');
 const gc_classes = require('./JS Data Classes/GC-Variants.js');
-var back_end_data_checker = require('./JS Data Classes/Back-End-Data-Checkers.js');
+var back_end_data_checker = require('./JS Data Classes/Back-End-Data-Checkers.js'); // Need to go over this entire file and place this variable name in front of each function instance from back-end-data-cheker.js. 
 const http = require('http');
 const { parse, resolve } = require('path');
 const { Console } = require('console');
@@ -100,7 +100,7 @@ server.listen(port);
        body = JSON.parse(body);
        establish_database_connection("saved_games").then(()=>{
           save_game(body); 
-          var data_checker = setInterval(()=>{if(check_game_data_save_checker()){ reset_game_data_save_checker(); clearInterval(data_checker); response.end(response.end('ok'));}},500);
+          var data_checker = setInterval(()=>{if(back_end_data_checker.check_game_data_save_checker()){ back_end_data_checker.reset_game_data_save_checker(); clearInterval(data_checker); response.end(response.end('ok'));}},500);
        })
      })
    }
@@ -118,7 +118,7 @@ server.listen(port);
           if(check_total_gc_save_and_save_checker() == true)
           {
              clearInterval(interval);
-             reset_gc_save_checker();
+             back_end_data_checker.reset_gc_save_checker();
              response.end('ok');
           }
         },500)
@@ -135,7 +135,7 @@ server.listen(port);
        body = JSON.parse(body);
        establish_database_connection("saved_games_gc").then(()=>{
         overwrite_game_gc(body);
-        var interval = setInterval(()=>{if(check_game_data_overwrite_gc_checker()){clearInterval(interval);reset_gc_overwrite_checker();response.end('ok')}})
+        var interval = setInterval(()=>{if(back_end_data_checker.check_game_data_overwrite_gc_checker()){clearInterval(interval);back_end_data_checker.reset_gc_overwrite_checker();response.end('ok')}})
        })
      }) 
    }
@@ -149,10 +149,10 @@ server.listen(port);
        establish_database_connection("saved_games_gc").then(()=>{
         load_game_gc(body);
         var interval = setInterval(()=>{
-          if(check_game_Data_entire_gc_load_check() == true)
+          if(back_end_data_checker.check_game_Data_entire_gc_load_check() == true)
           {
             clearInterval(interval);
-            reset_gc_load_checker();
+            back_end_data_checker.reset_gc_load_checker();
             loading_raw_data_gc.ship_and_combat_data = loading_raw_data;
             response.end(JSON.stringify(loading_raw_data_gc));
           }
@@ -169,7 +169,7 @@ server.listen(port);
       body = JSON.parse(body);
       establish_database_connection("saved_games").then(()=>{
         load_game(body);
-        var interval = setInterval(()=>{if(check_game_data_freeplay_load_checker()){clearInterval(interval); reset_game_data_freeplay_load_checker();response.end(JSON.stringify(loading_raw_data));}},500);
+        var interval = setInterval(()=>{if(back_end_data_checker.check_game_data_freeplay_load_checker()){clearInterval(interval); back_end_data_checker.reset_game_data_freeplay_load_checker();response.end(JSON.stringify(loading_raw_data));}},500);
       })
      })
    }
@@ -182,7 +182,7 @@ server.listen(port);
        body = JSON.parse(body);
        establish_database_connection("saved_games").then(()=>{
        overwrite_game(body);
-       var interval = setInterval(()=>{if(check_game_data_overwrite_freeplay_checker()){clearInterval(interval);reset_check_game_data_overwrite_freeplay_checker();response.end('ok');}});
+       var interval = setInterval(()=>{if(back_end_data_checker.check_game_data_overwrite_freeplay_checker()){clearInterval(interval);back_end_data_checker.reset_check_game_data_overwrite_freeplay_checker();response.end('ok');}});
        })
      })
    }
@@ -200,10 +200,10 @@ server.listen(port);
           game_names.gc_game_names = await get_game_names();
           var interval2 = setInterval(()=>{if(game_names.gc_game_names != undefined){
             clearInterval(interval2);
-            var interval3 = setInterval(()=>{if(check_game_data_names_checker)
+            var interval3 = setInterval(()=>{if(back_end_data_checker.check_game_data_names_checker)
             {
               clearInterval(interval3);
-              reset_game_data_names_checker();
+              back_end_data_checker.reset_game_data_names_checker();
               response.end(JSON.stringify(game_names))}})
           }},500);
         });
@@ -664,7 +664,7 @@ async function save_game_gc(body)
 
   //Insert each navy into the regular saved games db.
   var interval = setInterval(()=>{
-    if( check_data_gc_save_checker() == true)//make sure all gc stuff is done first before going into the freeplay database.
+    if( back_end_data_checker.check_data_gc_save_checker() == true)//make sure all gc stuff is done first before going into the freeplay database.
     {
       clearInterval(interval);
       establish_database_connection("saved_games").then(()=>{
@@ -689,8 +689,8 @@ async function save_game_gc(body)
         }
         else//Get gc faction teams.
         {
-          game_data_save_checker.turn_info_saved = true;
-          game_data_save_checker.team_info_saved = true;
+         back_end_data_checker. game_data_save_checker.turn_info_saved = true;
+         back_end_data_checker. game_data_save_checker.team_info_saved = true;
           insert_ships_in_db(all_ships,body.game_name);
           insert_upgrades_in_db(all_ships,body.game_name);
         }
@@ -701,7 +701,7 @@ async function save_game_gc(body)
         }
         else
         {
-          game_data_save_checker.reminder_info_saved = true;
+         back_end_data_checker. game_data_save_checker.reminder_info_saved = true;
         }
         if(body.combat_data!= undefined && body.combat_data!= null &&
            body.combat_data.target_locks !=null && body.combat_data.target_locks != undefined)
@@ -712,12 +712,12 @@ async function save_game_gc(body)
           }
           else
           {
-            game_data_save_checker.target_locks_saved = true;
+           back_end_data_checker. game_data_save_checker.target_locks_saved = true;
           }
         }
         else
         {
-          game_data_save_checker.target_locks_saved = true;
+         back_end_data_checker. game_data_save_checker.target_locks_saved = true;
         }
       })
     }
@@ -920,12 +920,12 @@ async function save_game(body)
     }
     else
     {
-      game_data_save_checker.target_locks_saved = true;
+     back_end_data_checker. game_data_save_checker.target_locks_saved = true;
     }
   }
   else
   {
-    game_data_save_checker.target_locks_saved = true;
+   back_end_data_checker. game_data_save_checker.target_locks_saved = true;
   }
 }
 
@@ -934,7 +934,7 @@ function insert_target_locks_in_db(game_name,target_locks)
   target_locks.forEach(lock=>{
     db.run("INSERT INTO TargetLockList(SaveGameName,assignmentNumber,targettingTeamName,targettingRoster,targettedTeamName,targettedRoster) VALUES(?,?,?,?,?,?)",game_name,lock.assignment_number, lock.targetting_team, lock.targetting_roster, lock.targetted_team, lock.targetted_roster);
   })
-  game_data_save_checker.target_locks_saved = true;
+ back_end_data_checker. game_data_save_checker.target_locks_saved = true;
 }
 
 function insert_turn_info(game_name,save_game_phase)
@@ -951,7 +951,7 @@ function insert_turn_info(game_name,save_game_phase)
   {
     db.run("INSERT INTO TurnInfo(SaveGameName,Phase) VALUES(?,?)",game_name,save_game_phase.phase);
   }
-  game_data_save_checker.turn_info_saved = true;
+ back_end_data_checker. game_data_save_checker.turn_info_saved = true;
    ////console.log("Phase: "+save_game_phase);
 }
 
@@ -960,7 +960,7 @@ function insert_reminders_in_db(reminders,game_name)
   if(reminders == null || reminders.length <= 0)//If there are no reminders, then this will be null.
   {
     //console.log("There were no reminders.");
-    game_data_save_checker.reminder_info_saved = true;
+   back_end_data_checker. game_data_save_checker.reminder_info_saved = true;
     return;
   }
   reminders.forEach(reminder=>{
@@ -969,14 +969,14 @@ function insert_reminders_in_db(reminders,game_name)
 
   })
   //console.log("reminders loaded into db.");
-  game_data_save_checker.reminder_info_saved = true;
+ back_end_data_checker. game_data_save_checker.reminder_info_saved = true;
 }
 
 function insert_save_game_info(game_name)
 {
   //console.log("Begin insert_save_game_info...")
   db.run("INSERT INTO GameIdentifiers(GameName) VALUES(?)",game_name);
-  game_data_save_checker.game_info_saved = true;
+ back_end_data_checker. game_data_save_checker.game_info_saved = true;
 }
 
   function insert_teams_into_table(body,game_name)
@@ -996,7 +996,7 @@ function insert_save_game_info(game_name)
       db.run("INSERT INTO SavedTeamsTable(SavedGameName,TeamName,HasInitiative,TurnOrder) VALUES(?,?,?,?)",game_name,body[i].team_name,has_init,turnOrder);
     }
     //console.log("END insert_teams_into_table...");
-    game_data_save_checker.team_info_saved = true;
+   back_end_data_checker. game_data_save_checker.team_info_saved = true;
   }
 
 function insert_upgrades_in_db(body,game_name)
@@ -1014,7 +1014,7 @@ function insert_upgrades_in_db(body,game_name)
         }
     }
   }
-  game_data_save_checker.upgrade_info_saved = true;
+ back_end_data_checker. game_data_save_checker.upgrade_info_saved = true;
 }
 
 function insert_ships_in_db(body,game_name)
@@ -1091,7 +1091,7 @@ function insert_ships_in_db(body,game_name)
       }
     }
     //console.log("ALL DONE WITH SHIPS!");
-    game_data_save_checker.ship_info_saved = true;
+   back_end_data_checker. game_data_save_checker.ship_info_saved = true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1161,14 +1161,14 @@ function load_game_gc(body)
       //console.log("ERROR: Data grabbed from the db for turn info is invalid.");
       loading_raw_data_gc.turn_data = turn_data;
     }
-    game_data_gc_load_checker.gc_turn_data = true;
+   back_end_data_checker.game_data_gc_load_checker.gc_turn_data = true;
 })
    query("SELECT * FROM PirateRosterNumbers WHERE GameName = ?",game_name).then( all_roster_numbers=>{
 
     all_roster_numbers.forEach(roster=>{
       loading_raw_data_gc.pirate_roster_numbers.push(roster.Roster);
     })
-    game_data_gc_load_checker.pirate_rosters = true;
+   back_end_data_checker.game_data_gc_load_checker.pirate_rosters = true;
 })
    query("SELECT * FROM PirateShipData WHERE GameName = ?",game_name).then( pirate_ship_data=>{
     if(pirate_ship_data.length == 1)
@@ -1185,23 +1185,23 @@ function load_game_gc(body)
       //console.log("ERROR: Data grabbed from the db for setup info is invalid.");
       loading_raw_data_gc.pirate_ship_quantities = pirate_ship_data;
     }
-    game_data_gc_load_checker.pirate_data = true;
+   back_end_data_checker.game_data_gc_load_checker.pirate_data = true;
 })
    query("SELECT * FROM SavedFactions WHERE GameName = ?",game_name).then( faction_data=>{
     loading_raw_data_gc.faction_data = faction_data;
-    game_data_gc_load_checker.faction_data = true;
+   back_end_data_checker.game_data_gc_load_checker.faction_data = true;
 })
    query("SELECT * FROM SavedListOfTheDead WHERE GameName = ?",game_name).then( dead_people_list=>{
     loading_raw_data_gc.list_of_the_dead = dead_people_list;
-    game_data_gc_load_checker.dead_people_data = true;
+   back_end_data_checker.game_data_gc_load_checker.dead_people_data = true;
 })
    query("SELECT * FROM SavedNavies WHERE GameName = ?",game_name).then( navy_data=>{
     loading_raw_data_gc.navies = navy_data;
-    game_data_gc_load_checker.navy_data = true;
+   back_end_data_checker.game_data_gc_load_checker.navy_data = true;
 })
    query("SELECT * FROM SavedPlanetData WHERE GameName = ?",game_name).then( planet_data=>{
     loading_raw_data_gc.planet_data = planet_data;
-    game_data_gc_load_checker.planet_data = true;
+   back_end_data_checker.game_data_gc_load_checker.planet_data = true;
 })
    query("SELECT * FROM SavedSetUpData WHERE GameName   = ?",game_name).then( gc_set_up_data=>{
     if(gc_set_up_data.length == 1)
@@ -1218,7 +1218,7 @@ function load_game_gc(body)
       //console.log("ERROR: Data grabbed from the db for setup info is invalid.");
       loading_raw_data_gc.set_up_data = gc_set_up_data;
     }
-    game_data_gc_load_checker.setup_data = true;
+   back_end_data_checker.game_data_gc_load_checker.setup_data = true;
 })
 //Get ship data from saved ship db.
 var interval = setInterval(()=>{if(check_game_data_load_gc_checker()){
@@ -1235,26 +1235,26 @@ function load_game(body)
     ////console.log("game name is: "+game_name);
         query("SELECT * FROM SavedTeamsTable WHERE SavedGameName = ? ORDER BY TurnOrder Asc",game_name).then( team_names=>{
         loading_raw_data.team_data = team_names;
-        game_data_freeplay_load_checker.team_data = true;
+        back_end_data_checker.game_data_freeplay_load_checker.team_data = true;
     })
         query("SELECT * FROM SavedShips WHERE SaveGameName = ? ORDER BY TurnOrder Asc",game_name).then(ships=>{
         loading_raw_data.ship_data = ships;
-        game_data_freeplay_load_checker.ship_data = true;
+        back_end_data_checker.game_data_freeplay_load_checker.ship_data = true;
     })
         query("SELECT * FROM TurnInfo WHERE SaveGameName = ?",game_name).then(info=>{
           loading_raw_data.turn_data = info;
-          game_data_freeplay_load_checker.turn_data = true;
+          back_end_data_checker.game_data_freeplay_load_checker.turn_data = true;
   })
         query("SELECT * FROM TargetLockList WHERE SaveGameName = ?",game_name).then(locks=>{
         loading_raw_data.target_lock_data = locks;
-        game_data_freeplay_load_checker.target_lock_data = true;
+        back_end_data_checker.game_data_freeplay_load_checker.target_lock_data = true;
 })
         query("SELECT * FROM upgradeList WHERE GameName = ?",game_name).then(upgrades=>{
         loading_raw_data.upgrade_data = upgrades;
-        game_data_freeplay_load_checker.upgrade_data = true;
+        back_end_data_checker.game_data_freeplay_load_checker.upgrade_data = true;
 })
         query("SELECT * FROM SavedReminders WHERE GameName = ?",game_name).then(reminders=>{
         loading_raw_data.reminders = reminders;
-        game_data_freeplay_load_checker.reminder_data = true;
+        back_end_data_checker.game_data_freeplay_load_checker.reminder_data = true;
 }) 
 }

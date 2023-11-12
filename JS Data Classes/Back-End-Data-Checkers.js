@@ -1,6 +1,7 @@
 /**
  * Define Checker Variables
  * This is used to confirm that data retrieval is complete for at least one of the following datatypes. 
+ * This is used to regulate the amount of time needed to fulfill each function on the backend and ensure no pre-matures exits occur. 
  */
 module.exports = {
 
@@ -17,7 +18,38 @@ game_data_grab_checker: {
     get_planet_data: false,
     get_planet_paths: false
   },
+
+  game_data_gc_load_checker:{ //Not used in dbInteraction. 
+    gc_turn_data: false,
+    pirate_rosters: false,
+    pirate_data: false,
+    faction_data: false,
+    dead_people_data: false,
+    navy_data: false,
+    planet_data: false,
+    setup_data: false
+  },
   
+    //Acts as a confrimation that a specific type of game data was saved to the database. 
+    game_data_save_checker: {
+      game_info_saved: false,
+      turn_info_saved: false,
+      team_info_saved: false,
+      ship_info_saved: false,
+      upgrade_info_saved: false,
+      reminder_info_saved: false,
+      target_locks_saved: false
+      },
+
+      game_data_freeplay_load_checker:{
+        team_data: false,
+        ship_data: false,
+        turn_data: false,
+        target_lock_data: false,
+        upgrade_data: false,
+        reminder_data: false
+      },
+
   //Checks to see if any types of data have been retrieved. 
   check_game_data_grabber: function()
   {
@@ -57,19 +89,10 @@ game_data_grab_checker: {
     this.game_data_grab_checker.get_planet_paths= false
   },
   
-  //Acts as a confrimation that a specific type of game data was saved to the database. 
-  game_data_save_checker: {
-  game_info_saved: false,
-  turn_info_saved: false,
-  team_info_saved: false,
-  ship_info_saved: false,
-  upgrade_info_saved: false,
-  reminder_info_saved: false,
-  target_locks_saved: false
-  },
+
   
   //Checks to see if any of the game save datatypes are missing. 
-  check_game_data_save_checker: function()
+  check_game_data_save_checker: function() //<- This function is not currently being used. 
   {
       //console.log(game_data_save_checker);
       if(  this.game_data_save_checker.game_info_saved == false|| 
@@ -119,7 +142,7 @@ game_data_grab_checker: {
   },
   
   
-  reset_check_game_data_overwrite_freeplay_checker: function()
+  reset_check_game_data_overwrite_freeplay_checker: function() // <- This function is not currently in use. 
   {
     this.reset_game_data_save_checker();
     game_data_overwrite_freeplay_checker.old_data_deleted = false;
@@ -148,15 +171,6 @@ game_data_grab_checker: {
   {
     this.game_data_names_checker.freeplay_names_grabbed = false;
     this.game_data_names_checker.gc_names_grabbed = false;
-  },
-
-  game_data_freeplay_load_checker:{
-    team_data: false,
-    ship_data: false,
-    turn_data: false,
-    target_lock_data: false,
-    upgrade_data: false,
-    reminder_data: false
   },
 
   check_game_data_freeplay_load_checker: function()
@@ -210,7 +224,7 @@ game_data_grab_checker: {
       }
   },
 
-  check_total_gc_save_and_save_checker : function()
+  check_total_gc_save_and_save_checker : function() //<0- Function currently not being used. 
   {
       if(this.check_data_gc_save_checker() == false ||
          this.check_game_data_save_checker() == false)
@@ -259,18 +273,9 @@ game_data_grab_checker: {
     game_data_overwrite_freeplay_checker.old_data_deleted = false;
   },
   
-  game_data_gc_load_checker:{
-    gc_turn_data: false,
-    pirate_rosters: false,
-    pirate_data: false,
-    faction_data: false,
-    dead_people_data: false,
-    navy_data: false,
-    planet_data: false,
-    setup_data: false
-  },
 
-  check_game_data_load_gc_checker: function()
+
+  check_game_data_load_gc_checker: function() //Function currently not in use. 
   {
     if(  game_data_gc_load_checker.gc_turn_data == false ||
       game_data_gc_load_checker.pirate_rosters == false||
